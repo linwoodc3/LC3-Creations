@@ -90,7 +90,13 @@ plt.yticks(())
 ###############################################################################
 
 X['Cluster Class'] = pd.Series(kmeans.labels_, index=X.index)
+print X.loc[:,['Duration (min)','Hard Accelerations','Cluster Class']]
 X.plot( x = 'Hard Accelerations', y = 'Cluster Class', kind = 'scatter')
+X.plot( x = 'Hard Brakes', y = 'Cluster Class', kind = 'scatter')
+X.plot( x = 'Average MPG', y = 'Cluster Class', kind = 'scatter')
+X.plot( x = 'Duration (min)', y = 'Cluster Class', kind = 'scatter')
+X.plot( x = 'Distance (mi)', y = 'Cluster Class', kind = 'scatter')
+X.plot( x = 'Fuel Cost (USD)', y = 'Cluster Class', kind = 'scatter')
 
 
 # row and column sharing
