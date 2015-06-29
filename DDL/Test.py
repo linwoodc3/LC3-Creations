@@ -21,8 +21,10 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn import metrics
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 from sklearn.decomposition import PCA
 from sklearn import preprocessing
+import matplotlib.text as txt
 
 
 ###############################################################################
@@ -80,7 +82,7 @@ plt.xticks(())
 plt.yticks(())
 
 
-plt.show()
+
 
 ###############################################################################
 # Visualization of Classes and Features
@@ -88,5 +90,36 @@ plt.show()
 
 X['Cluster Class'] = pd.Series(kmeans.labels_, index=X.index)
 X.plot( x = 'Hard Accelerations', y = 'Cluster Class', kind = 'scatter')
-plt.show()
 
+
+# row and column sharing
+f, ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = plt.subplots(3, 2, sharex='col', sharey='row')
+
+ax1.plot(x = X['Hard Accelerations'], y = X['Cluster Class'], color = 'r')
+ax1.set_title('Hard Acceleration')
+ax1.set_xlabel('Number of Hard Accelerations', set_fontsize = 9)
+
+
+ax2.scatter(X['Hard Brakes'], y = X['Cluster Class'], color = 'b')
+ax2.set_title('Hard Brakes')
+ax2.set_xlabel('# of Hard Brakes', )
+
+ax3.scatter(X['Average MPG'], y = X['Cluster Class'],  color='g')
+ax3.set_title('Average MPG')
+ax3.set_xlabel('Average MPG')
+
+ax4.plot(x=X['Duration Over 70 mph (secs)'], y = X['Cluster Class'], color = 'k')
+ax4.set_title('Duration Over 70 mph')
+ax4.set_xlabel('Time > 70mph')
+
+ax5.plot(x=X['Duration (min)'], y = X['Cluster Class'], color = 'k')
+ax5.set_title('Duration of trip (min)')
+ax5.set_ylabel('Cluster Label')
+ax5.set_xlabel('Duration')
+
+ax6.plot(x=X['Distance (mi)'], y = X['Cluster Class'], color = 'k')
+ax6.set_title('Distance of trip (mi)')
+ax6.set_ylabel('Cluster Label')
+ax6.set_xlabel('Distance')
+
+plt.show()
