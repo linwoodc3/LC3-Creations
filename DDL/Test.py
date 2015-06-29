@@ -25,6 +25,7 @@ import matplotlib.lines as mlines
 from sklearn.decomposition import PCA
 from sklearn import preprocessing
 import matplotlib.text as txt
+#from sklearn.cross_validation import train_test_split
 
 
 ###############################################################################
@@ -97,7 +98,7 @@ f, ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = plt.subplots(3, 2, sharex='col', share
 
 ax1.plot(x = X['Hard Accelerations'], y = X['Cluster Class'], color = 'r')
 ax1.set_title('Hard Acceleration')
-ax1.set_xlabel('Number of Hard Accelerations', set_fontsize = 9)
+ax1.set_xlabel('Number of Hard Accelerations')
 
 
 ax2.scatter(X['Hard Brakes'], y = X['Cluster Class'], color = 'b')
