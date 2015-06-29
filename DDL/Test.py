@@ -83,55 +83,10 @@ plt.yticks(())
 plt.show()
 
 ###############################################################################
-# Visualization
+# Visualization of Classes and Features
 ###############################################################################
 
 X['Cluster Class'] = pd.Series(kmeans.labels_, index=X.index)
 X.plot( x = 'Hard Accelerations', y = 'Cluster Class', kind = 'scatter')
 plt.show()
-
-# Scatter plot of scores
-# ~~~~~~~~~~~~~~~~~~~~~~
-# 1) On diagonal plot X vs Y scores on each components
-plt.figure(figsize=(12, 8))
-plt.subplot(221)
-X.plot( x = 'Hard Accelerations', y = 'Cluster Class', kind = 'scatter',"ob",label="Label")
-plt.title('Hard Accelerations and Cluster Label)'
-plt.legend(loc="best")
-
-plt.subplot(224)
-plt.plot(X_train_r[:, 1], Y_train_r[:, 1], "ob", label="train")
-plt.plot(X_test_r[:, 1], Y_test_r[:, 1], "or", label="test")
-plt.xlabel("x scores")
-plt.ylabel("y scores")
-plt.title('Comp. 2: X vs Y (test corr = %.2f)' %
-          np.corrcoef(X_test_r[:, 1], Y_test_r[:, 1])[0, 1])
-plt.xticks(())
-plt.yticks(())
-plt.legend(loc="best")
-
-# 2) Off diagonal plot components 1 vs 2 for X and Y
-plt.subplot(222)
-plt.plot(X_train_r[:, 0], X_train_r[:, 1], "*b", label="train")
-plt.plot(X_test_r[:, 0], X_test_r[:, 1], "*r", label="test")
-plt.xlabel("X comp. 1")
-plt.ylabel("X comp. 2")
-plt.title('X comp. 1 vs X comp. 2 (test corr = %.2f)'
-          % np.corrcoef(X_test_r[:, 0], X_test_r[:, 1])[0, 1])
-plt.legend(loc="best")
-plt.xticks(())
-plt.yticks(())
-
-plt.subplot(223)
-plt.plot(Y_train_r[:, 0], Y_train_r[:, 1], "*b", label="train")
-plt.plot(Y_test_r[:, 0], Y_test_r[:, 1], "*r", label="test")
-plt.xlabel("Y comp. 1")
-plt.ylabel("Y comp. 2")
-plt.title('Y comp. 1 vs Y comp. 2 , (test corr = %.2f)'
-          % np.corrcoef(Y_test_r[:, 0], Y_test_r[:, 1])[0, 1])
-plt.legend(loc="best")
-plt.xticks(())
-plt.yticks(())
-plt.show()
-
 
