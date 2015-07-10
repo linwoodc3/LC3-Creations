@@ -46,27 +46,21 @@ with open("automatic.csv", 'ru') as in_data:
     X = pd.DataFrame.from_csv(in_data, sep=',')
 
 #Turn data into a numpy array for machine learning
-Xnew = np.asfarray(X[['Distance (mi)','Duration (min)','Fuel Cost (USD)','Average MPG','Fuel Volume (gal)','Hard Accelerations','Hard Brakes','Duration Over 70 mph (secs)',	'Duration Over 75 mph (secs)','Duration Over 80 mph (secs)']])
+Xnew = np.asfarray(X[['Duration (min)','Average MPG', 'Distance (mi)']])#'Duration (min)','Fuel Cost (USD)','Average MPG','Fuel Volume (gal)','Hard Accelerations','Hard Brakes','Duration Over 70 mph (secs)',	'Duration Over 75 mph (secs)','Duration Over 80 mph (secs)']])
+min_max_scaler = preprocessing.MinMaxScaler(feature_range = (0,1))
+scaled = min_max_scaler.fit_transform(Xnew) 
+patched = RandomizedPCA(n_components = 2).fit_transform(scaled)
 
-X_train, X_test = train_test_split(Xnew, test_size = .5)
+X_train, X_test = train_test_split(patched, test_size = .5)
 n_clusters, n_features = X_train.shape
+
 print X_train.shape
 v = mixture.VBGMM(n_components = 2, covariance_type = 'full')
 v.fit(X_train)
 v.predict(X_train)
 v.score(X_test)
 
-print v.score(X_test)
 
-# display predicted scores by the model as a contour plot
-x = np.linspace(-20.0, 40.0)
-y = np.linspace(-20.0, 30.0)
-X, Y = np.meshgrid(x, y)
-XX = np.array([X.ravel(), Y.ravel()]).T
-Z1 = v.score_samples(X_train)
-
-CS = plt.contour(X, Y, Z1)
-CB = plt.colorbar(CS, shrink=0.8, extend='both')
 plt.scatter(X_train[:, 0], X_train[:, 1], .8)
 
 plt.title('Negative log-likelihood predicted by a GMM')
