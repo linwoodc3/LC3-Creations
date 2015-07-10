@@ -46,7 +46,7 @@ with open("automatic.csv", 'ru') as in_data:
     X = pd.DataFrame.from_csv(in_data, sep=',')
 
 #Turn data into a numpy array for machine learning
-Xnew = np.asfarray(X[['Duration (min)','Average MPG', 'Distance (mi)']])#'Duration (min)','Fuel Cost (USD)','Average MPG','Fuel Volume (gal)','Hard Accelerations','Hard Brakes','Duration Over 70 mph (secs)',	'Duration Over 75 mph (secs)','Duration Over 80 mph (secs)']])
+Xnew = np.asfarray(X[['Duration (min)','Average MPG', 'Distance (mi)', 'Duration Over 70 mph (secs)' ]])#'Duration (min)','Fuel Cost (USD)','Average MPG','Fuel Volume (gal)','Hard Accelerations','Hard Brakes','Duration Over 70 mph (secs)',	'Duration Over 75 mph (secs)','Duration Over 80 mph (secs)']])
 min_max_scaler = preprocessing.MinMaxScaler(feature_range = (0,1))
 scaled = min_max_scaler.fit_transform(Xnew) 
 patched = RandomizedPCA(n_components = 2).fit_transform(scaled)
@@ -63,6 +63,6 @@ v.score(X_test)
 
 plt.scatter(X_train[:, 0], X_train[:, 1], .8)
 
-plt.title('Negative log-likelihood predicted by a GMM')
+plt.title('Negative log-likelihood predicted by a VBGMM')
 plt.axis('tight')
 plt.show()
