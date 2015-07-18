@@ -55,7 +55,7 @@ X_train, X_test = train_test_split(patched, test_size = .5)
 n_clusters, n_features = X_train.shape
 
 print X_train.shape
-v = mixture.VBGMM(n_components = 2, covariance_type = 'full')
+v = mixture.VBGMM(n_components = 2, covariance_type = 'spherical')
 v.fit(X_train)
 v.predict(X_train)
 v.score(X_test)
