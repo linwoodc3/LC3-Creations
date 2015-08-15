@@ -1,9 +1,35 @@
 #!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
+###############################################################################
+# Information
+###############################################################################
+# Created by Linwood Creekmore 
+
+
+
+# In partial fulfillment of the requirements for the Georgetown University Data Analytics Graduate Certificate Program
+
+# August 9, 2015
+
+# https://plus.google.com/+LinwoodCreekmoreIII/
+
+###############################################################################
+# External Help or online resources used
+###############################################################################
+
+# http://stackoverflow.com/questions/26126442/combining-text-stemming-and-removal-of-punctuation-in-nltk-and-scikit-learn
+
+
 """
 Masked wordcloud
 ================
 Using a mask you can generate wordclouds in arbitrary shapes.
 """
+
+###############################################################################
+# Imports
+###############################################################################
 
 from os import path
 from scipy.misc import imread
