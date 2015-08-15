@@ -24,7 +24,7 @@ import subprocess
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk import pos_tag
-#from nltk.stem.wordnet import
+import time
 from sys import getsizeof
 from guppy import hpy
 
@@ -46,9 +46,11 @@ TESTDIR     = os.path.normpath(os.path.join(os.path.expanduser("~"),"projects","
 
 corpus = []
 
+start_time = time.time()
 def extractPDFtext(fileName):
+    print fileName
     print os.path.normpath(os.path.join(TESTDIR,fileName))
-    corpus.append(subprocess.check_output(['pdf2txt',str(os.path.normpath(os.path.join(TESTDIR,fileName)))]))
+    corpus.append(subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))]))
 
 
     '''
@@ -72,3 +74,4 @@ if __name__ == '__main__':
     h = hpy()
     print h.heap()
     print len(corpus)
+    print ("---%s seconds ---" % (time.time() - start_time))
