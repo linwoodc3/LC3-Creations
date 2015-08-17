@@ -3,7 +3,7 @@
 ###############################################################################
 # Information
 ###############################################################################
-# Created by Linwood Creekmore 
+__author__ =  'Linwood Creekmore'
 
 
 # Code to publish at KDD 2016
@@ -21,11 +21,9 @@
 from os import walk
 import os
 import subprocess
-from sklearn.feature_extraction.text import TfidfVectorizer
+import nltk
 from nltk.stem.wordnet import WordNetLemmatizer
-from nltk import pos_tag
 import time
-from sys import getsizeof
 from guppy import hpy
 
 wordnet_tags = ['n','v']
@@ -70,6 +68,7 @@ if __name__ == '__main__':
         for fileName in fileList:
             if fileName.startswith('p') and fileName.endswith('.pdf'):
             	extractPDFtext(fileName)
+
 
     h = hpy()
     print h.heap()
