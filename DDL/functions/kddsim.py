@@ -25,6 +25,7 @@ import nltk
 from nltk.stem.wordnet import WordNetLemmatizer
 import time
 from guppy import hpy
+from lemmatize import lemmatize
 
 wordnet_tags = ['n','v']
 
@@ -41,6 +42,8 @@ TESTDIR     = os.path.normpath(os.path.join(os.path.expanduser("~"),"projects","
 ###############################################################################
 # Main Function
 ###############################################################################
+
+# This code will iterate over files and extract text from the PDF; each document is an item in the list
 
 corpus = []
 
@@ -69,7 +72,7 @@ if __name__ == '__main__':
             if fileName.startswith('p') and fileName.endswith('.pdf'):
             	extractPDFtext(fileName)
 
-
+    lemmatize()
     h = hpy()
     print h.heap()
     print len(corpus)

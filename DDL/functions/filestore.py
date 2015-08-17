@@ -3,7 +3,7 @@
 ###############################################################################
 # Information
 ###############################################################################
-__author__ = 'Linwood Creekmore'
+__author__ =  'Linwood Creekmore'
 
 
 # Code to publish at KDD 2016
@@ -12,30 +12,28 @@ __author__ = 'Linwood Creekmore'
 
 # https://plus.google.com/+LinwoodCreekmoreIII/
 
-# Acknowledgement: http://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
+
 
 ###############################################################################
 # Imports
 ###############################################################################
 
-import string
+import json
+import os
+
+
+
 
 ###############################################################################
 # Admin
 ###############################################################################
-table = string.maketrans("", "")
+
+
+# Create code that will check to see if json file exists, and if not, create the json file.  If it exists, it adds a key:value pair
+
+kdd_docstore = json.dumps({'cr07':nopunct},sort_keys=True, indent=4, separators=(',',': '))
 
 
 ###############################################################################
 # Main Function
 ###############################################################################
-
-# Code will remove punctuation from the document string
-def test_trans(s):
-    return s.translate(table, string.punctuation)
-
-###############################################################################
-# 'Main' Function
-###############################################################################
-
-if __name__ == '__main__':

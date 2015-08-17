@@ -8,7 +8,7 @@ __author__ =  'Linwood Creekmore'
 
 # Code to publish at KDD 2016
 
-# August 13, 2015
+# August 16, 2015
 
 # https://plus.google.com/+LinwoodCreekmoreIII/
 
@@ -28,13 +28,16 @@ from nltk import word_tokenize, pos_tag
 # Admin
 ###############################################################################
 lemmatizer = WordNetLemmatizer()
+tagged_corpus = [pos_tag(word_tokenize(corpus))]
 wordnet_tags = ['n','v','a','s','r']
 
 ###############################################################################
 # Main Function
 ###############################################################################
 
-tagged_corpus = [pos_tag(word_tokenize(corpus))
+'''This function will lem and stem the document, ultimately reducing the dimensions of the processed text file. '''
+
+
 
 def lemmatize(token,tag):
     if tag[0].lower() in ['n','v','a','s','r']:
@@ -42,5 +45,14 @@ def lemmatize(token,tag):
     return token
 
 
-final = [[lemmatize(token, tag) for token,tag in tagged_corpus]]
-cleaned = (" ".join(map(str,final[0])))
+
+
+
+
+###############################################################################
+# 'Main' Function
+###############################################################################
+
+if __name__ == '__main__':
+    final = [[lemmatize(token, tag) for token,tag in tagged_corpus]]
+    cleaned = (" ".join(map(str,final[0])))
