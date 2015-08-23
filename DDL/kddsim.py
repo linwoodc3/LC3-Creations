@@ -48,7 +48,7 @@ corpus = []
 
 def extractPDFtext(fileName):
     print os.path.normpath(os.path.join(TESTDIR,fileName))
-    corpus.append(subprocess.check_output(['pdf2txt',str(os.path.normpath(os.path.join(TESTDIR,fileName)))]))
+    corpus.append(subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))]))
 
 
     '''
