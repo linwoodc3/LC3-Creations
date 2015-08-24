@@ -40,7 +40,7 @@ def convert(fname, pages=None):
     converter.close()
     text = output.getvalue()
     output.close
-    print text
+    return text
 
 
-convert('/home/linwood/Desktop/KDD 2015/docs/p19.pdf')
+

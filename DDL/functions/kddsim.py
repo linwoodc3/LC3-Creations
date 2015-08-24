@@ -25,7 +25,9 @@ import nltk
 from nltk.stem.wordnet import WordNetLemmatizer
 import time
 from guppy import hpy
-from lemmatize import lemmatize
+import json
+import PDFcut
+
 
 wordnet_tags = ['n','v']
 
@@ -45,13 +47,14 @@ TESTDIR     = os.path.normpath(os.path.join(os.path.expanduser("~"),"projects","
 
 # This code will iterate over files and extract text from the PDF; each document is an item in the list
 
-corpus = []
+corpus = {}
 
 start_time = time.time()
 def extractPDFtext(fileName):
     print fileName
-    print os.path.normpath(os.path.join(TESTDIR,fileName))
-    corpus.append(subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))]))
+    #print os.path.normpath(os.path.join(TESTDIR,fileName))
+    corpus[str(fileName)]=subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))])
+    #corpus[str(fileName)]=PDFcut.convert(str(os.path.normpath(os.path.join(TESTDIR,fileName))))
 
 
     '''
@@ -72,7 +75,7 @@ if __name__ == '__main__':
             if fileName.startswith('p') and fileName.endswith('.pdf'):
             	extractPDFtext(fileName)
 
-    lemmatize()
+    print corpus
     h = hpy()
     print h.heap()
     print len(corpus)
