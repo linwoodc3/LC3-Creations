@@ -43,7 +43,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 d = path.dirname(__file__)
 
 # Text is coming from the NLTK Brown corpus; cr07
-test = brown.sents('cr07')
+#test = brown.sents('cr07')
+test = open('/home/linwood/Desktop/CIOPanelQues.txt','r')
 
 #In case I want to do some scikit-learn work...not sure
 vect = CountVectorizer(stop_words='english')
@@ -66,7 +67,8 @@ stopwords = stop_words.ENGLISH_STOP_WORDS
 # read the mask image
 # taken from
 # http://www.stencilry.org/stencils/movies/alice%20in%20wonderland/255fk.jpg
-tank_mask = imread('/home/linwood/Pictures/tank.png')
+#tank_mask = imread('/home/linwood/Pictures/tank.png')
+tank_mask = imread('/home/linwood/Pictures/soldier.jpg')
 
 wc = WordCloud(background_color="white", max_words=1000, mask=tank_mask,
                stopwords=stopwords)
