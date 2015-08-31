@@ -72,7 +72,9 @@ def lemmatize(token,tag):
                 return lemmatizer.lemmatize(token,tag[0].lower())
         return token
 
-punt = re.sub('[&,\]\[]|\''," ", b)
+# punt = re.sub('[&,\]\[]|\''," ", b)
+fumble = re.sub('IC ITE', 'ICITE',b)
+punt = re.sub('[&,\]\[]|\''," ", fumble)
 tagged_corpus = pos_tag(word_tokenize(punt))
 slim = [lemmatize(token,tag) for token,tag in tagged_corpus]
 newslim =  (" ".join(map(str,slim)))
@@ -84,7 +86,7 @@ data.write(newslim)
 # Major Functions
 ###############################################################################
 
-with open('/home/linwood/Desktop/LemCIOQues.txt') as inp:
+with open(os.path.normpath(os.path.join(path,'Data','LemCIOQues.txt'))) as inp:
 	data = list(inp)
 text = data[0]
 
@@ -103,11 +105,13 @@ stopwords.add("ITE")
 stopwords.add("t")
 stopwords.add("ESITE")
 
+print stopwords
+
 
 # read the mask image
 custom_mask = imread(os.path.normpath((os.path.join(path,'Pictures for Mask','soldier.png'))))
 
-wc = WordCloud(background_color="white", max_words=1000, mask=custom_mask,
+wc = WordCloud(background_color="white", max_words=500, mask=custom_mask,
                stopwords=stopwords)
 # generate word cloud
 wc.generate(text)
