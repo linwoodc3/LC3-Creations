@@ -8,9 +8,9 @@
 
 
 
-# In partial fulfillment of the requirements for the Georgetown University Data Analytics Graduate Certificate Program
+# Text analytics on audience submitted panel questions.
 
-# August 9, 2015
+# August 26, 2015
 
 # https://plus.google.com/+LinwoodCreekmoreIII/
 
@@ -111,7 +111,7 @@ print stopwords
 # read the mask image
 custom_mask = imread(os.path.normpath((os.path.join(path,'Pictures for Mask','soldier.png'))))
 
-wc = WordCloud(background_color="white", max_words=500, mask=custom_mask,
+wc = WordCloud(background_color="white", max_words=150, mask=custom_mask,
                stopwords=stopwords)
 # generate word cloud
 wc.generate(text)
