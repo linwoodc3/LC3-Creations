@@ -27,9 +27,10 @@ import time
 from guppy import hpy
 import json
 import PDFcut
+import re
 
 
-wordnet_tags = ['n','v']
+wordnet_tags = ['n', 'v', 'a', 's', 'r']
 
 
 ###############################################################################
@@ -53,13 +54,17 @@ start_time = time.time()
 def extractPDFtext(fileName):
     print fileName
     #print os.path.normpath(os.path.join(TESTDIR,fileName))
-    corpus[str(fileName)]=subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))])
+    # corpus[str(fileName)]=subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))])
+    #a = ((repr(subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))]).encode('utf-8'))).decode('unicode_escape').encode('ascii','ignore'))
+    a = subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))])
+    cheese = repr(a)
+    b = (cheese.decode('unicode_escape').encode('ascii','ignore'))
     #corpus[str(fileName)]=PDFcut.convert(str(os.path.normpath(os.path.join(TESTDIR,fileName))))
-
+    print re.search(r"(.*?)\w*\\",cheese).group(0)
 
     '''
-    if len(corpus) == 10:
-        print corpus[8]
+    if len(corpus) == 1:
+        print corpus[str(fileName)]
 
     else:
         pass
