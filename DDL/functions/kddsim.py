@@ -60,7 +60,9 @@ def extractPDFtext(fileName):
     cheese = repr(a)
     b = (cheese.decode('unicode_escape').encode('ascii','ignore'))
     #corpus[str(fileName)]=PDFcut.convert(str(os.path.normpath(os.path.join(TESTDIR,fileName))))
-    print ((re.search(r"(.*?)\w*\\n",cheese).group(0)).decode('unicode_escape').encode('ascii','ignore'))
+
+    # This line extracts the title from the pdf file
+    Title = ((re.search(r"(.*?)\w*\\n",cheese).group(0)).decode('unicode_escape').encode('ascii','ignore'))
 
     '''
     if len(corpus) == 1:
