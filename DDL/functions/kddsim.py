@@ -24,10 +24,11 @@ import subprocess
 import nltk
 from nltk.stem.wordnet import WordNetLemmatizer
 import time
-from guppy import hpy
+#from guppy import hpy
 import json
 import PDFcut
 import re
+
 
 
 wordnet_tags = ['n', 'v', 'a', 's', 'r']
@@ -52,18 +53,33 @@ corpus = {}
 
 start_time = time.time()
 def extractPDFtext(fileName):
-    print fileName
     #print os.path.normpath(os.path.join(TESTDIR,fileName))
     # corpus[str(fileName)]=subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))])
-    #a = ((repr(subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))]).encode('utf-8'))).decode('unicode_escape').encode('ascii','ignore'))
+
+    # a = ((repr(subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))]).encode('utf-8'))).decode('unicode_escape').encode('ascii','ignore'))
     a = subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))])
     cheese = repr(a)
     b = (cheese.decode('unicode_escape').encode('ascii','ignore'))
-    #corpus[str(fileName)]=PDFcut.convert(str(os.path.normpath(os.path.join(TESTDIR,fileName))))
 
     # This line extracts the title from the pdf file
-    Title = ((re.search(r"(.*?)\w*\\n",cheese).group(0)).decode('unicode_escape').encode('ascii','ignore'))
+    Title = (((re.search(r"(.*?)\w*\\n",cheese).group(0)).decode('unicode_escape').encode('ascii','ignore')).rstrip('\n')).lstrip('\'')
+    print unicode(re.findall(r'\n\n([^]]*)\n\n',a[:2500])[0], errors='ignore')
+    print "\nFinished processing %s" % Title
 
+    #corpus[str(fileName)]=PDFcut.convert(str(os.path.normpath(os.path.join(TESTDIR,fileName))))
+
+    # Removes quotes and escapes from title
+    # re.sub(r'[\"\\]'," ",Title)
+
+
+    '''
+    I'm going to store the lemmatized tokens, stemmed tokens, tfidf matrix, Title, filename,
+    year, author, extracted entities, tfidf of extracted entities,
+    '''
+
+    # Creating a dictionary within another dictionary to store information about my documents
+    # [str(Title)]['Details']={}
+    # corpus[str(Title)][''] =
     '''
     if len(corpus) == 1:
         print corpus[str(fileName)]
@@ -83,7 +99,7 @@ if __name__ == '__main__':
             	extractPDFtext(fileName)
 
     print corpus
-    h = hpy()
-    print h.heap()
+    #h = hpy()
+    #print h.heap()
     print len(corpus)
     print ("---%s seconds ---" % (time.time() - start_time))

@@ -32,7 +32,7 @@ Using a mask you can generate wordclouds in arbitrary shapes.
 ###############################################################################
 
 from os import path
-from scipy.misc import imread
+from imread import imread
 import matplotlib.pyplot as plt
 import random
 from nltk.corpus import brown
@@ -43,8 +43,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 d = path.dirname(__file__)
 
 # Text is coming from the NLTK Brown corpus; cr07
-#test = brown.sents('cr07')
-test = open('/home/linwood/Desktop/CIOPanelQues.txt','r')
+test = brown.sents('cr07')
+#test = open('/home/linwood/Desktop/CIOPanelQues.txt','r')
 
 #In case I want to do some scikit-learn work...not sure
 vect = CountVectorizer(stop_words='english')

@@ -32,7 +32,7 @@ Using a mask you can generate wordclouds in arbitrary shapes.
 ###############################################################################
 
 import os
-from scipy.misc import imread
+import imread
 import matplotlib.pyplot as plt
 import random
 from nltk.corpus import brown
