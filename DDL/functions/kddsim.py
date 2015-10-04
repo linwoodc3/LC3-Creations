@@ -21,6 +21,7 @@ __author__ =  'Linwood Creekmore'
 from os import walk
 import os
 import subprocess
+import sys
 import nltk
 from nltk.stem.wordnet import WordNetLemmatizer
 import time
@@ -57,13 +58,25 @@ def extractPDFtext(fileName):
     # corpus[str(fileName)]=subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))])
 
     # a = ((repr(subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))]).encode('utf-8'))).decode('unicode_escape').encode('ascii','ignore'))
-    a = subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))])
-    cheese = repr(a)
-    b = (cheese.decode('unicode_escape').encode('ascii','ignore'))
+    a = unicode(subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))]),errors='ignore')
+
+    corpus['Text']=a
+    print corpus
+    print sys.getsizeof(corpus)
+    print len(corpus)
+    return
 
     # This line extracts the title from the pdf file
-    Title = (((re.search(r"(.*?)\w*\\n",cheese).group(0)).decode('unicode_escape').encode('ascii','ignore')).rstrip('\n')).lstrip('\'')
-    print unicode(re.findall(r'\n\n([^]]*)\n\n',a[:2500])[0], errors='ignore')
+    Title = unicode(re.findall("^[^\\n]*",a)[0],errors='ignore')
+
+    # This line of code returns the abstract, authors, universities
+    print "\n %s" % unicode(re.findall(r'\n\n([^]]*)\n\n',a[:2500])[0], errors='ignore')
+
+    # Get entities from the document, switch up the \n's and append to list
+    entities = [i for i in re.findall(r'\n\n(.+?)\n',snip)
+]
+
+
     print "\nFinished processing %s" % Title
 
     #corpus[str(fileName)]=PDFcut.convert(str(os.path.normpath(os.path.join(TESTDIR,fileName))))
@@ -103,3 +116,21 @@ if __name__ == '__main__':
     #print h.heap()
     print len(corpus)
     print ("---%s seconds ---" % (time.time() - start_time))
+
+
+
+###############################################################################
+# Graveyard for stuff that didn't work
+###############################################################################
+
+'''
+#Extract text from pdf and get rid of unicode errors
+a = subprocess.check_output(['pdf2txt.py',str(os.path.normpath(os.path.join(TESTDIR,fileName)))])
+cheese = repr(a)
+b = (cheese.decode('unicode_escape').encode('ascii','ignore'))
+
+
+#Extract the title
+Title = ((re.search(r"(.*?)\w*\\n",cheese).group(0)).decode('unicode_escape').encode('ascii','ignore')).rstrip('\n')).lstrip('\'')
+
+'''
