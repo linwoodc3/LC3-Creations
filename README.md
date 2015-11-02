@@ -1,1 +1,1 @@
-A collection of project and code from personal learning and experimentation.
+A collection of projects and code from personal learning and experimentation.
