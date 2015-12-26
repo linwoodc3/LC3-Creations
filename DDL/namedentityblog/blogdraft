@@ -21,7 +21,7 @@
     "Named entity extraction is a core subtask of building knowledge from semi/unstructured text sources.  Considering recent increases in computing power and decreases in the costs of data storage, data scientists and developers can build large knowledge bases that contain millions of entities and hundreds of millions of facts about them.  These knowledge bases are key contributors to intelligence computer behavior. Therefore, named entity extraction is at the core of several popular technologies such as smart assistants ([Siri](http://www.apple.com/ios/siri/), [Google Now](https://www.google.com/landing/now/)), machine reading, and deep interpretation of natural language.\n",
     "\n",
     "With a realization of how essential it is to recognize information units like names, including person, organization and location names, and numeric expressions including time, date, money\n",
-    "and percent expressions, one question remains.  How do you perform named entity extraction, which is formally called “[Named Entity Recognition and Classification (NERC)](https://benjamins.com/catalog/bct.19)”?\n",
+    "and percent expressions, several questions come to mind.  How do you perform named entity extraction, which is formally called “[Named Entity Recognition and Classification (NERC)](https://benjamins.com/catalog/bct.19)”?  What tools are out there?  How can you evaluate their performance?  And most important, what works with Python (shamelessly exposing my bias)?  \n",
     "\n",
     "Luckily, this age of open source leaves no shortage of information extraction tools to survey, and this post will examine a few of the options that can be used with Python.    \n",
     "\n",
