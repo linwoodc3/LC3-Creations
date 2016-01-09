@@ -4,20 +4,20 @@
 Named entity extraction is a core subtask to build knowledge from semi/unstructured text sources<sup><a href="#fn1" id="ref1">1</a></sup>.  Considering recent increases in computing power and decreases in the costs of data storage, data scientists and developers can build large knowledge bases that contain millions of entities and hundreds of millions of facts about them.  These knowledge bases are key contributors to intelligent computer behavior<sup><a href="#fn2" id="ref2">2</a></sup>.  Therefore, named entity extraction is at the core of several popular technologies such as smart assistants ([Siri](http://www.apple.com/ios/siri/), [Google Now](https://www.google.com/landing/now/)), machine reading, and deep interpretation of natural language<sup><a href="#fn3" id="ref3">3</a></sup>.
 
 With a realization of how essential it is to recognize information units like names, including person, organization and location names, and numeric expressions including time, date, money
-and percent expressions, several questions come to mind.  How do you perform named entity extraction, which is formally called “[Named Entity Recognition and Classification (NERC)](https://benjamins.com/catalog/bct.19)”?  What tools are out there?  How can you evaluate their performance?  And most important, what works with Python (shamelessly exposing my bias)?  
+and percent expressions, several questions come to mind.  How do you perform named entity extraction, formally known as “[Named Entity Recognition and Classification (NERC)](https://benjamins.com/catalog/bct.19)”?  What tools are out there?  How can you evaluate their performance?  And most important, what works with Python (shamelessly exposing my bias)?  
 
-This post will survey openly available NERC tools and compare the results against hand labeled data for precision, accuracy, and recall.  The tools and basic information extraction principles in this discussion begin the process of structuring unstructured data.
+This post will survey open source NERC tools and compare the results against hand labeled data for precision, accuracy, and recall.  The tools and basic information extraction principles in this discussion begin the process of structuring unstructured data.  Principles in this post can be used to perform more complex natural language processing piplines that derive unique insights from large collections of unstructured data.
 
 We will specifically learn to:
 1. follow the data science pipeline (see image below)
 2. prepare semistructured natural language data for ingest using regex
 3. create a custom corpus in [Natural Language Toolkit](http://www.nltk.org/) 
-4. use a suite of openly available NERC tools to extract entities and store in json format; supports open data sharing
-5. compare the performance of NERC tools on our corpus
-6. improve named entity extraction by combining only the true positives from NERC results (ensemble classifier)
+4. use a suite open source NERC tools to extract entities and store in json format; supports open data sharing principles
+5. compare the performance of NERC tools
+6. improve named entity extraction implementing a simplistic ensemble classifier
 
 <br>
-<a href="#pipe" id="pipeline"><center><h3>The Data Science Pipeline:<br>Georgetown Data Science Certificate Program</h3></center></a>
+<a href="#pipe" id="pipeline"><center><h3>The Data Science Pipeline:<br>Practical Data Science Cookbook</h3></center></a>
 <div class="image">
 
       <img src="./files/data_science_pipeline.png" alt="Data Science Pipeline" height="300" width="450" top:"35" left:"170" />
@@ -30,21 +30,20 @@ We will specifically learn to:
 
 ### Administrative Setup: Getting your environment exactly like mine...or close
 
-The first thing we will do is set up an environment that is exactly like the environment I used to process this data. I am using [Anaconda](https://www.continuum.io/why-anaconda) which is an easy-to-install, free package manager, environment manager, Python distribution, and collection of over 150 open source packages with free community support. I advise using this to recreate this work because, with a few lines of code, you can have all the dependencies I used to process this data with the exception of one function (email extractor).  
+The first thing we do is set up an environment that is exactly like the environment I used to process this data. I  used [Anaconda](https://www.continuum.io/why-anaconda), which is an easy-to-install, free package manager, environment manager, Python distribution, and collection of over 150 open source packages with free community support. I advise using Anaconda to recreate this work because, with a few lines of code, you can have all the dependencies used in this post with the exception of one function (email extractor).  
 
-* Install Anaconda first, or a start a virtual environment
+* [Install Anaconda](http://docs.continuum.io/anaconda/install)
     * verify that conda is installed using [these instructions](http://conda.pydata.org/docs/using/using.html#verify-that-conda-is-installed-check-current-conda-version)
 * Download the [namedentity_requirements.yml](https://github.com/linwoodc3/LC3-Creations/blob/master/DDL/namedentityblog/namedentity_requirements.yml) (remember where you saved it on your computer)
 * Follow the ["Use Environment from file"](http://conda.pydata.org/docs/using/envs.html#use-environment-from-file) instructions on Anaconda's website.
 
-If you use some other method to recreate the environment, make sure you have all the files installed from my yml file.  
-The one dependency not in the yml file is the email extractor.  [Cut and paste the function from this website](https://gist.github.com/dideler/5219706), save it to a .py file, and make sure it is in your sys.path or environment path.  
+If you use some other method to set up a virtual environment, make sure you have all the files installed from my yml file. The one dependency not in the yml file is the email extractor.  [Cut and paste the function from this website](https://gist.github.com/dideler/5219706), save it to a .py file, and make sure it is in your sys.path or environment path.  
 
-If you are running this as an ipython notebook, go to the appendix and run all of the blocks of code before continuing. 
+If you are running this as an iPython notebook, stop here.  Go to the appendix and run all of the blocks of code before continuing. 
 
 ### The Data: Peer Reviewed Journals and Keynote Speaker Abstracts from KDD 2014 and 2015
 
-Before delving into the pipeline, we need a good dataset.  Jason Brownlee of www.machinelearningmastery.com had some good suggestions in his [August 2015 article](http://machinelearningmastery.com/practice-machine-learning-with-small-in-memory-datasets-from-the-uci-machine-learning-repository/) on picking a dataset for machine learning exercises:  
+Before delving into the pipeline, we need a good dataset.  Jason Brownlee had some good suggestions in his [August 2015 article](http://machinelearningmastery.com/practice-machine-learning-with-small-in-memory-datasets-from-the-uci-machine-learning-repository/) on picking a dataset for machine learning exercises:  
 
 * **Real-World**: The datasets should be drawn from the real world (rather than being contrived). This will keep them interesting and introduce the challenges that come with real data.
 
@@ -56,7 +55,7 @@ Before delving into the pipeline, we need a good dataset.  Jason Brownlee of www
 
 * **Plentiful**: You need many datasets to choose from, both to satisfy the traits you would like to investigate and (if possible) your natural curiosity and interests. 
 
-Luckily, we have a dataset that meets nearly all of these requirements.  I attended the Knowledge Discovery and Data Mining (KDD) conferences in [New York City (2014)](http://www.kdd.org/kdd2014/) and [Sydney, Australia (2015)](http://www.kdd.org/kdd2015/).  Both years, attendees received a USB with the conference proceedings.  Each repository contains over 230 peer reviewed journal articles and keynote speaker abstracts on data mining, knowledge discovery, big data, data science and their applications. The full conference proceedings can be purchased for \$60 at the [Association for Computing Machinery's Digital Library](https://dl.acm.org/purchase.cfm?id=2783258&CFID=740512201&CFTOKEN=34489585) (includes ACM membership). This post will work with a dataset that is equivalent to the conference proceedings.  It's important to note that this dataset recreates a real word data science exercise that is instructive of big data problems.  We will take semi-structured data (PDF journal articles and abstracts in publication format), strip text from the files, and add more structure to the data that would facilitate follow on analysis. 
+Luckily, we have a dataset that meets nearly all of these requirements.  I attended the Knowledge Discovery and Data Mining (KDD) conferences in [New York City (2014)](http://www.kdd.org/kdd2014/) and [Sydney, Australia (2015)](http://www.kdd.org/kdd2015/).  Both years, attendees received a USB with the conference proceedings.  Each repository contains over 230 peer reviewed journal articles and keynote speaker abstracts on data mining, knowledge discovery, big data, data science and their applications. The full conference proceedings can be purchased for \$60 at the [Association for Computing Machinery's Digital Library](https://dl.acm.org/purchase.cfm?id=2783258&CFID=740512201&CFTOKEN=34489585) (includes ACM membership). This post will work with a dataset that is equivalent to the conference proceedings and take semi-structured data (PDF journal articles and abstracts in publication format), strip text from the files, and add more structure to the data that would facilitate follow on analysis. 
 
 <blockquote cite="https://github.com/linwoodc3/LC3-Creations/blob/master/DDL/namedentityblog/KDDwebscrape.ipynb">
 Interested parties looking for a free option can use the <a href="https://pypi.python.org/pypi/beautifulsoup4/4.4.1">beautifulsoup</a> and <a href="https://pypi.python.org/pypi/requests/2.9.1">request</a> libraries to scrape the <a href="http://dl.acm.org/citation.cfm?id=2785464&CFID=740512201&CFTOKEN=3448958">ACM website for KDD 2015 conference data</a> that can be used in natural language processing pipelines.  I have some <a href="https://github.com/linwoodc3/LC3-Creations/blob/master/DDL/namedentityblog/KDDwebscrape.ipynb">skeleton web scraping code</a> to generate lists of all abstracts, author names, and journal/keynote address titles.    
@@ -65,17 +64,17 @@ Interested parties looking for a free option can use the <a href="https://pypi.p
 
 ### Data Exploration: Getting the number of files, and file type 
 
-The data is stored locally in the following directory:
+The data is stored locally in the following directories:
 ```python
 >>> import os
 >>> print os.getcwd()
 /Users/linwood/Desktop/KDD_15/docs
 ```
-Let's explore the number of files we have and naming conventions. We begin with the administrative tasks of loading modules, establishing paths, etc.  
+Let's explore the number of files we have and naming conventions. First, we cover administrative tasks of loading modules, establishing paths, etc.  
 <br><br>
 
 
-```python
+```
 #**********************************************************************
 # Importing what we need
 #**********************************************************************
@@ -88,13 +87,15 @@ from os import walk
 #**********************************************************************
 
 path        = os.path.abspath(os.getcwd())
+
+# This is where all of our journal articles and keynote abstracts live
 TESTDIR     = os.path.normpath(os.path.join(os.path.expanduser("~"),"Desktop","KDD_15","docs"))
 ```
 
-<br><br>Next we iterate over the files in the directory and store those names in the empty list we created called *files*.  We time the operation, print list with the file names and also print out the length of the list (gives number of target files).<br><br>
+<br><br>To get a look at the naming conventions, we use a loop to iterate over the files in the directory and print out the filenames.  At the same time, we store each filename to a list, and do a *len* on the list to see how many files we are working with.<br><br>
 
 
-```python
+```
 # Establish an empty list to append filenames as we iterate over the directory with filenames
 files = []
 
@@ -121,22 +122,22 @@ print
 print '[%s]' % ', '.join(map(str, files)) # print the list of filenames
 ```
 
-    CPU times: user 3 µs, sys: 1 µs, total: 4 µs
-    Wall time: 15 µs
+    CPU times: user 2 µs, sys: 3 µs, total: 5 µs
+    Wall time: 5.01 µs
     
     253
     
     [p1.pdf, p1005.pdf, p1015.pdf, p1025.pdf, p1035.pdf, p1045.pdf, p1055.pdf, p1065.pdf, p1075.pdf, p1085.pdf, p109.pdf, p1095.pdf, p1105.pdf, p1115.pdf, p1125.pdf, p1135.pdf, p1145.pdf, p1155.pdf, p1165.pdf, p1175.pdf, p1185.pdf, p119.pdf, p1195.pdf, p1205.pdf, p1215.pdf, p1225.pdf, p1235.pdf, p1245.pdf, p1255.pdf, p1265.pdf, p1275.pdf, p1285.pdf, p129.pdf, p1295.pdf, p1305.pdf, p1315.pdf, p1325.pdf, p1335.pdf, p1345.pdf, p1355.pdf, p1365.pdf, p1375.pdf, p1385.pdf, p139.pdf, p1395.pdf, p1405.pdf, p1415.pdf, p1425.pdf, p1435.pdf, p1445.pdf, p1455.pdf, p1465.pdf, p1475.pdf, p1485.pdf, p149.pdf, p1495.pdf, p1503.pdf, p1513.pdf, p1523.pdf, p1533.pdf, p1543.pdf, p1553.pdf, p1563.pdf, p1573.pdf, p1583.pdf, p159.pdf, p1593.pdf, p1603.pdf, p1621.pdf, p1623.pdf, p1625.pdf, p1627.pdf, p1629.pdf, p1631.pdf, p1633.pdf, p1635.pdf, p1637.pdf, p1639.pdf, p1641.pdf, p1651.pdf, p1661.pdf, p1671.pdf, p1681.pdf, p169.pdf, p1691.pdf, p1701.pdf, p1711.pdf, p1721.pdf, p1731.pdf, p1741.pdf, p1751.pdf, p1759.pdf, p1769.pdf, p1779.pdf, p1789.pdf, p179.pdf, p1799.pdf, p1809.pdf, p1819.pdf, p1829.pdf, p1839.pdf, p1849.pdf, p1859.pdf, p1869.pdf, p1879.pdf, p1889.pdf, p189.pdf, p1899.pdf, p19.pdf, p1909.pdf, p1919.pdf, p1929.pdf, p1939.pdf, p1949.pdf, p1959.pdf, p1969.pdf, p1979.pdf, p1989.pdf, p199.pdf, p1999.pdf, p2009.pdf, p2019.pdf, p2029.pdf, p2039.pdf, p2049.pdf, p2059.pdf, p2069.pdf, p2079.pdf, p2089.pdf, p209.pdf, p2099.pdf, p2109.pdf, p2119.pdf, p2127.pdf, p2137.pdf, p2147.pdf, p2157.pdf, p2167.pdf, p2177.pdf, p2187.pdf, p219.pdf, p2197.pdf, p2207.pdf, p2217.pdf, p2227.pdf, p2237.pdf, p2247.pdf, p2257.pdf, p2267.pdf, p2277.pdf, p2287.pdf, p229.pdf, p2297.pdf, p2307.pdf, p2309.pdf, p2311.pdf, p2313.pdf, p2315.pdf, p2317.pdf, p2319.pdf, p2321.pdf, p2323.pdf, p2325.pdf, p2327.pdf, p2329.pdf, p239.pdf, p249.pdf, p259.pdf, p269.pdf, p279.pdf, p289.pdf, p29.pdf, p299.pdf, p3.pdf, p309.pdf, p319.pdf, p329.pdf, p339.pdf, p349.pdf, p359.pdf, p369.pdf, p379.pdf, p387.pdf, p39.pdf, p397.pdf, p407.pdf, p417.pdf, p427.pdf, p437.pdf, p447.pdf, p457.pdf, p467.pdf, p477.pdf, p487.pdf, p49.pdf, p497.pdf, p5.pdf, p507.pdf, p517.pdf, p527.pdf, p537.pdf, p547.pdf, p557.pdf, p567.pdf, p577.pdf, p587.pdf, p59.pdf, p597.pdf, p607.pdf, p617.pdf, p627.pdf, p635.pdf, p645.pdf, p655.pdf, p665.pdf, p675.pdf, p685.pdf, p69.pdf, p695.pdf, p7.pdf, p705.pdf, p715.pdf, p725.pdf, p735.pdf, p745.pdf, p755.pdf, p765.pdf, p775.pdf, p785.pdf, p79.pdf, p805.pdf, p815.pdf, p825.pdf, p835.pdf, p845.pdf, p855.pdf, p865.pdf, p875.pdf, p885.pdf, p89.pdf, p895.pdf, p9.pdf, p905.pdf, p915.pdf, p925.pdf, p935.pdf, p945.pdf, p955.pdf, p965.pdf, p975.pdf, p985.pdf, p99.pdf, p995.pdf]
 
 
-<br><br>There are 253 total files in the directory. We examine the pdf file in its rawest form to get an idea of the format. Here is one example:<br><br>
+<br><br>There are 253 total files in the directory. Here is a screen capture for how the journal articles look in the PDF viewer:<br><br>
 
 
 
 <img src="./files/journalscreencap.png" alt="Sample of Journal Format" height="700" width="700" top:"35" left:"170">
 
 
-<br><br>We learn a few things immediately. Our data is in PDF format and it's semistructured (follows journal article format with sections like "abstract", "title").  PDFs are a wonderful human readable presentation of data. But for data analyisis, they are extremely difficult to work with.  If you have an option to get the data BEFORE it was converted to or added to PDF, go for that option.  If it's your only option, be prepared for a lot of these moments:
+<br><br>We learn a few things immediately. Our data is in PDF format and it's semistructured (follows journal article format with sections like "abstract", "title").  PDFs are a wonderful human readable presentation of data. But for data analyisis, they are extremely difficult to work with.  If you have an option to get the data BEFORE it was converted to or added to PDF, go for that option.  If PDFs are your only option, be prepared for a lot of these moments:
 
 ![Pulling hair out](http://i1012.photobucket.com/albums/af243/njmike731/man-pulling-hair-out-2-773892-1.jpg)
 
@@ -144,7 +145,7 @@ In today's exercise, we have no alternatives outside of the web scraping code li
 
 ### Data Ingestion: Stripping text from PDFs and creating a custom NLTK corpus
 
-The first step in the <href id="pipe"><a href="#pipeline" title="Jump back to data science pipeline graphic.">data science pipeline</a> is to ingest our data.  We use several Python tools which include:
+The first step in the <href id="pipe"><a href="#pipeline" title="Jump back to data science pipeline graphic.">data science pipeline</a> is to ingest our data into the environment for analysis.  We use several Python tools which include:
 
 * [pdfminer](https://pypi.python.org/pypi/pdfminer/) - this is the tool that makes it ALL happen.  It has a command line tool called "pdf2text.py" that extract text contents from a PDF. **This must be installed on your computer BEFORE executing this code**.  Visit the [pdfminer homepage](http://euske.github.io/pdfminer/index.html#pdf2txt) for instructions
 
@@ -156,10 +157,10 @@ The first step in the <href id="pipe"><a href="#pipeline" title="Jump back to da
 
 * [unicodedata](https://docs.python.org/2/library/unicodedata.html) - some unicode characters won't extract nicely. This library allows latin unicode characters to degrade gracefully into ASCII.
 
-We are now going to iterate over each file in our raw data directory, strip the text, and write the *.txt* file to newly created directory.  Then we will follow the instructions from [Section 1.9, Chapter 2 of NLTK's Book](http://www.nltk.org/book/ch02.html) to build a custom corpus from our text files.  Having our target documents loaded as an NLTK corpus brings the power of NLTK to our analysis goals.  Let's begin with administrative tasks such as loading modules and creating the necessary directories.<br><br>
+Similar to our exploration steps above, we will iterate over the files in the directory, but with a few new steps.  This time, we will strip the text, and write the *.txt* file to newly created directory.  If we were using AWS, we would write these .txt files to [Amazon's Simple Storage Service (S3)](https://aws.amazon.com/s3/).  Next up, we use the simple instructions from [Section 1.9, Chapter 2 of NLTK's Book](http://www.nltk.org/book/ch02.html) to build a custom corpus.  Having our target documents loaded as an NLTK corpus brings the power of NLTK to our analysis goals.  Let's begin with administrative tasks such as loading modules and creating the necessary directories.  We aren't doing much in this post, but if you are doing more complex NLP jobs, it could save a lot of trouble. Here's the code to accomplish what's discussed above:<br><br>
 
 
-```python
+```
 #**********************************************************************
 # Importing what we need
 #**********************************************************************
@@ -179,10 +180,10 @@ if not os.path.exists(corpuspath):
     os.mkdir(corpuspath)
 ```
 
-<br><br>Now we are to the big task of stripping text from the PDFs.  In the code below, we walk down the directory, and strip text from the files with names that begin with 'p' and end with 'pdf'.  We use the *fileName* variable to name the files we write to disk.  This will come in handy when we load data into NLTK.  Keep in mind, this task takes the longest, so be prepared to wait a a few minutes depending on good your computer is.  If you are doing this in an environment where you can spin up compute resources, your time will be drastically reduced.  Let's begin.<br><br>
+<br><br>Now we are to the big task of stripping text from the PDFs.  In the code below, we walk down the directory, and strip text from the files with names that begin with 'p' and end with 'pdf', based on our exploration of naming convenstions agove.  We use the *fileName* variable to name the files we write to disk.  Keep in mind, this task takes the longest, so be prepared to wait a few minutes depending on the processing power of your computer.  If you are doing this in a distributed cloud environment with thousands of documents, take advantage of the ability to spin up compute resources, to reduce your wait time.  Our code to accomplish the task mentioned:<br><br>
 
 
-```python
+```
 #**********************************************************************
 # Core code to iterate over files in the directory
 #**********************************************************************
@@ -215,11 +216,12 @@ for dirName, subdirList, fileList in os.walk(TESTDIR):
                     else:
                         pass
 
+# This code builds our custom corpus.  The corpus path is a path to where we saved all of our .txt files of stripped text                    
 kddcorpus= nltk.corpus.PlaintextCorpusReader(corpuspath, '.*\.txt')
 ```
 
 
-```python
+```
 # if you've already run the code block above and built the .txt files, use this single line if you restart the kernel; saves time
 kddcorpus= nltk.corpus.PlaintextCorpusReader(corpuspath, '.*\.txt')
 ```
@@ -227,7 +229,7 @@ kddcorpus= nltk.corpus.PlaintextCorpusReader(corpuspath, '.*\.txt')
 <br><br>This is a pretty big step.  We have a semi-structured data set in a format where we can query and analyze different pieces of data.  All of our data is loaded as an NLTK corpus, meaning we could try tons of techniques outlined in the [NLTK book](http://www.nltk.org/book/) or use the NLTK APIs to pass data into [scikit-learn machine learning pipelines for text](http://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html) (maybe for a later blog). Let's see how many words (including stop words) we have in our entire corpus. This is a part of exploring our dataset, as laid out in a great book on Data Science<sup><a href="#fn4" id="ref4">4</a></sup>  <br><br>
 
 
-```python
+```
 wordcount = 0
 for fileid in kddcorpus.fileids():
     wordcount += len(kddcorpus.words(fileid))
@@ -241,7 +243,7 @@ print wordcount
 This step didn't come off without it's errors.  We got a little bit of gobbledygook (that is a [real word](http://www.merriam-webster.com/dictionary/gobbledygook) by the way). Here are the first 1000 characters of document 2157:
 
 
-```python
+```
 print kddcorpus.raw("p2157.txt")[:1000]
 ```
 
@@ -272,7 +274,7 @@ print kddcorpus.raw("p2157.txt")[:1000]
     LQIRUPDWLRQSURYLGHGE\WHOHFRPPXQL
 
 
-<br>The NLTK book has an [excellent section on processing raw text and unicode issues](http://www.nltk.org/book/ch03.html#fig-unicode). I could never figure out what caused the error above but that's a dose of real world data problems.   Let's move on.  To begin our exploration of regular expressions (aka "regex"), it's important to point out some good resources to brush up on the topic.  The best resource I ever had was in [Videos 1-3, Week 4, Getting and Cleaning Data, Data Science Specialization Track](https://www.coursera.org/learn/data-cleaning) (At Coursera by Johns Hopkins University).  The instruction and examples in these helped me UNDERSTAND how to use regex vice googling ["how to match text between two strings python regex"](https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=how+to+match+text+between+two+strings+python+regex) and hacking away until getting the desired output.  When you understand regex, you will start to use metacharacter expression matches vice using literal matches, and crush any text matching requirment.  Here are some learning resources listed in my own subjective order of usefulness and relevance to python:
+<br>I could never figure out what caused the error above but that's a dose of real world data problems. The NLTK book has an [excellent section on processing raw text and unicode issues](http://www.nltk.org/book/ch03.html#fig-unicode).  They discuss some problems I've encountered above.  Let's move on and begin pieces of the next step.  To begin our exploration of regular expressions (aka "regex"), it's important to point out some good resources to brush up on the topic.  The best resource I have experienced was in [Videos 1-3, Week 4, Getting and Cleaning Data, Data Science Specialization Track](https://www.coursera.org/learn/data-cleaning) (At Coursera by Johns Hopkins University).  The instruction and examples in these helped me UNDERSTAND how to use regex vice googling ["how to match text between two strings python regex"](https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=how+to+match+text+between+two+strings+python+regex) and hacking away until getting the desired output.  When you understand regex, you will start to use metacharacter expression matches vice using literal matches, and crush any text matching requirement.  Here are some learning resources listed in my own subjective order of usefulness and relevance to python:
 * http://regexone.com/ (interactive teaching)
 * https://regex101.com/ (interactive testing; you can paste your text and test expressions)
 * http://regexr.com/ (interactive testing like above)
@@ -282,7 +284,7 @@ print kddcorpus.raw("p2157.txt")[:1000]
 <br>As a quick test, we extract some "good enough" titles from the first 26 documents. I say "good enough" because some author names get caught up int he extractions below.  <br><br>
 
 
-```python
+```
 # This title extraction is probably unnecessarily complex, but it gets the job done; we make use of the metacharacters vice literal matches
 
 p=re.compile('^(.*)([\s]){2}[A-z]+[\s]+[\s]?.+')# matches text, starting from beginning of line, followed by at least two
@@ -318,16 +320,16 @@ for fileid in kddcorpus.fileids()[:25]:
     Incorporating World Knowledge to Document Clustering via Heterogeneous Information Networks
 
 
-### Data wrangling and computation: Using Regular Expressions to extract specific sections of the paper
+### Data wrangling and munging: Using Regular Expressions to extract specific sections of the paper
 
-The next step in <href id="pipe"><a href="#pipeline" title="Jump back to data science pipeline graphic.">data science pipeline</a> is the most time consuming; data wrangling.  For simplicity, let's focus wrangling the data so we can use the NERC on two sections of the paper:
+The next step in the <href id="pipe"><a href="#pipeline" title="Jump back to data science pipeline graphic.">data science pipeline</a> is the most time consuming; data wrangling.  For simplicity, let's focus on wrangling the data so we can use the NERC on two sections of the paper:
 * the top section which includes authors and schools; this is all text above the abstract
 * the references section of the paper (keynote speaker abstracts do not have an abstract)
 
-The tools of choice to extract sections are the ["positive lookbehind" and "positive lookahead"](https://docs.python.org/2/library/re.html) expressions. Here is an example of code to extract the abstract only:<br>
+The regex tools of choice to extract sections are the ["positive lookbehind" and "positive lookahead"](https://docs.python.org/2/library/re.html) expressions. Here is an example of code to extract the abstract only:<br>
 
 
-```python
+```
 # set our regular expression
 p= re.compile('(?<=ABSTRACT)(.+)(?=Categories and Subject Descriptors)')
 try:
@@ -348,7 +350,7 @@ unicodedata.normalize('NFKD', abstract).encode('ascii','ignore').strip() # conve
 
 
 
-Nice!  Now, to be "pythonic" we build two functions that can extract the top and references section of the documents.  For fun, I also made other function to extract the keywords and abstract sections of the documents.  We could do the same for any section of paper although I must provide a warning.  **Working with natural language is a messy ordeal!**  This is a top notch organization (ACM) and a top notch conference (KDD) but human error sitll makes it way into the picture:
+Nice!  Now, to be "pythonic" we build two functions that can extract the top and references sections of the documents.  For fun, I also made other functions to extract the keywords and abstract sections of the documents.  We could do the same for any section of paper although I must provide a warning.  **Working with natural language is a messy ordeal!**  This corpus comes from a top notch data mining organization but human error and a lack of standardization makes it way into the picture:
 
 ![Human Error](http://www.process-improvement-institute.com/wp-content/uploads/2015/05/Accounting-for-Human-Error-Probability-in-SIL-Verification.jpg)
 
@@ -356,20 +358,20 @@ Specifically in our case:
 * paper 1 header section = "Categories and Subject Descriptors"
 * paper 2 header section = "Categories & Subject Descriptors"
 
-Very small difference but these types of differences cause TONS of headaches.  The result?  You have a decision to make: **account for these differences or ignore them**.  I worked to include AS MUCH of the 253 corpus as possible in the results but it's never perfect.  There are also some documents that will be missing sections altogether (i.e. keynote speaker documents do not have a references section.  Our two functions will:
+That may seem like a small difference but these types of differences cause TONS of headaches.  The result?  You have a decision to make: **account for these differences or ignore them**.  I worked to include AS MUCH of the 253 corpus as possible in the results but it's never perfect.  There are also some documents that will be missing sections altogether (i.e. keynote speaker documents do not have a references section.  Our two functions will:
 
 1. Extract only the relevant text for the section we seek
 2. Extract a character count for the section
 3. Make additonal calculations or extractions
-  * the top section extraction also extract emails
+  * the top section extraction also extracts emails
   * we count the number of references and store that value
-  * as added benefit, we create a simple "word per reference" calculation
+  * as added benefit, we create a simple "word per reference" calculation for the reference extraction
 4. Store all the above data as a nested dictionary with the filename as a key
 
-These are loooooong blocks of code to accomplish the task above.  For now, we will only show the code to extract the references and perform the quick analysis mentioned above.  The other functions will be in the appendix.  In fairness, all functions could be reduced down to one function composed of nested function calls.  We will save that for later and get the "functionality" working before optimizing the code. See the comments below to follow along or just skip to the next section. 
+These extraction jobs are loooooong blocks of code to accomplish the task above.  For now, we will only show the code to extract the references section and push the other functions to the appendix for those who are interested.  In fairness, all functions could be reduced down to one function composed of nested function calls.  Code optimization is a worthy goal, but right now, we're just looking for functions that "function".  Here is a block of code to extract references:
 
 
-```python
+```
 # Code to pull the ferences section only, store a character count, number of references, and "word per reference" calculation
 
 def refpull(docnum=None,section='references',full = False):
@@ -489,10 +491,10 @@ def refpull(docnum=None,section='references',full = False):
         return failids
 ```
 
-That's a big block of code!  Don't fret, there are several similar blocks in the appendix to extract the abstract and keywords.  Data is messy; this is what cleaning looks like.  In the code above, we also make use of the *nltk.word_tokenize* tool to create the "word per reference" figure.  Let's test our function and some output (the word_tokenize calculation will take some time):
+That's a big block of code!  Remember, there are similar blocks of code for other sections in the paper.  One could also write their own to retrieve only the body, the first paragraph, figure text, etc.  Data is messy; this is what cleaning looks like.  In the code above, we also make use of the *nltk.word_tokenize* tool to create the "word per reference" figure.  Let's test references function and look at the output (**NOTE: the word_tokenize calculation will take some time to run**):
 
 
-```python
+```
 # call our function, setting "full=True" extracts ALL references in corpus
 test = refpull(full=True)
 
@@ -505,8 +507,10 @@ man = collections.OrderedDict(test)
 x = itertools.islice(man.items(), 0, 10)
 ```
 
+With that done, we will make a pretty output of the data using something a [tabulate](https://pypi.python.org/pypi/tabulate) module. The joy of Python is, someone has already made a tool to do exactly what you're thinking about. Tabulate makes the standard print output into a more organized "pretty" format.  Let's write the code and give it a go:
 
-```python
+
+```
 # Let's use a nifty table module to print this all pretty like: https://pypi.python.org/pypi/tabulate
 # The joy of Python and open source: someone has created something to do what you want; Google is your friend.  
 
@@ -537,10 +541,10 @@ print tabulate(table,headers=["filename","Character Count", "Number of reference
 
 Finally, we are in <href id="pipe"><a href="#pipeline" title="Jump back to data science pipeline graphic.">data science pipeline</a> steps where data scientists WANT to live: computation, analyses, modeling and application!!!   Notice I've mixed the next two steps because we are using models, applying them to our data, and performing analysis below.
 
-We can now test how well some open source NERC tools extract entities from the top and reference sections of our corpus.  By top section, I am referring to all text that occurs before the keyFor comparison, I went through and hand labled entities in two documents.  Hand labeling is an expensive and tedious process.  For two documents, we have the hand labeled authors, organizations, and locations from the top section of the article.  Second, there is a list of all authors from the references section and finally, a list of all combined authors (person entities) in the top and reference section combined. 
+We can now test how well some open source NERC tools extract entities from the top and reference sections of our corpus.  By top section, I am referring to all text that occurs before the keyFor comparison, I went through and hand labled entities in two documents.  Hand labeling is an expensive and tedious process.  For two documents, we have the hand labeled authors, organizations, and locations from the top section of the article.  Second, there is a list of all authors from the references section and finally, a list of all combined authors (person entities) in the top and reference section combined. I've only done two (2) documents, but that is 295 cut-and-pastes of names or organizations. Let's take a look:
 
 
-```python
+```
 # filename p19.txt
 
 p19pdf_authors=['Tim Althoff','Xin Luna Dong','Kevin Murphy','Safa Alai','Van Dang','Wei Zhang']
@@ -604,7 +608,7 @@ print "There are %r authors in the references" %len(p19pdf_references_authors)
 
 
 
-```python
+```
 # filename p29.txt
 
 p29pdf_authors=['Laurent Amsaleg','Stéphane Girard','Oussama Chelly','Teddy Furon','Michael E. Houle','Ken-ichi Kawarabayashi',
@@ -660,12 +664,12 @@ print "There are %r authors in the references" %len(p29pdf_references_authors)
     There are 106 authors in the references
 
 
-An easy test for accuracy is to compare entities extracted by the NERC tools to the hand labeled extractions.  This will help us to:
+Now we are ready to start testing.  An easy test for accuracy is to compare entities extracted by the NERC tools to the hand labeled extractions.  This will help us to:
 
 * Compare machice extracted list of persons to hand labeled lists
 * Compute precision, accuracy and recall
 
-We are using three open source NERC tools.  Each NERCs could be trained for improved extractions, but we are testing "out of the box" performance.  The tools are:
+We are using three open source NERC tools.  Each NERC tool could be trained to improve performance, but we are testing "out of the box" performance.  The tools are:
 
 1.  [NLTK has a chunk package](http://www.nltk.org/api/nltk.chunk.html) that uses NLTK’s recommended named entity chunker to chunk the given list of tagged tokens.  Following the natural language processing pipeline where a string is tokenized, and tagged with parts of speed (POS) tags, the NLTK chunker identifies non-overlapping groups and assigns them to an entity class.  Read more about NLTK's chunking capabilities in [the NLTK book](http://www.nltk.org/book/ch07.html)
 
@@ -673,10 +677,10 @@ We are using three open source NERC tools.  Each NERCs could be trained for impr
 
 3. [Polyglot](http://polyglot.readthedocs.org/en/latest/index.html) is natural language pipeline that supports massive multilingual (i.e. language) applications.  It supports tokenization in 165 languages, language detection in 196 languages, named entity recognition in 40 languages, part of speech tagging in 16 languages, sentiment analysis in 136 languages, word embeddings in 137 languages, morphological analysis in 135 languages, and transliteration in 69 languages.  It is a powerhouse tool for natural language processing! We will use the named entity recognition feature for English langauge in this exercise. Read Section 3 of the [Polyglot paper by Al-Rfou et al to understand how they modeled NER as a word level classification problem using an ensemble method (neural network and one vs all classifier) where backpropagation and stochastic gradient descent were used for model optimization](http://arxiv.org/pdf/1410.3791.pdf)  <br>
 
-Before beginning, we will use our functions and NLTK corpus wrangling to position our data for the NERC tool.<br><br>
+Before beginning, we take advantage of the NLTK functionality to get only the data we are interested in. Here is our code: <br><br>
 
 
-```python
+```
 # We need the top and references sections from p19.txt and p29.txt
 
 p19={'top': toppull("p19.txt")['p19.txt']['top'], 'references':refpull("p19.txt")['p19.txt']['references']}
@@ -685,15 +689,17 @@ p29={'top': toppull("p29.txt")['p29.txt']['top'], 'references':refpull("p29.txt"
 
 <br>All the munging and wrangling paid off; we can access any document and pull out a section with a few lines of code. 
 
-In this next block of code, we will apply the NLTK standard chunker, Stanford Named Entity Recognizer, and Polyglot extractor to our data.  The Standard NLTK chunker comes with NLTK libraries.  NLTK provides an [interface to the Stanford NERC tool](http://www.nltk.org/_modules/nltk/tag/stanford.html).  Details for [using the tool are on the NLTK page](http://www.nltk.org/api/nltk.tag.html#module-nltk.tag.stanford). The jar files can be downloaded [here](http://nlp.stanford.edu/software/index.shtml).  Finally, [Polyglot](https://pypi.python.org/pypi/polyglot) is available via pypi.  
+In this next block of code, we will apply the NLTK standard chunker, Stanford Named Entity Recognizer, and Polyglot extractor to our data.  I'll restate some basic information about the tools.  The Standard NLTK chunker comes with NLTK libraries.  NLTK provides an [interface to the Stanford NERC tool](http://www.nltk.org/_modules/nltk/tag/stanford.html).  Details for [using the Stanford NER tool are on the NLTK page](http://www.nltk.org/api/nltk.tag.html#module-nltk.tag.stanford) and the required jar files can be downloaded [here](http://nlp.stanford.edu/software/index.shtml).  Finally, [Polyglot](https://pypi.python.org/pypi/polyglot) is available via pypi.  
 
-For each NERC tool, I made functions in the appendix to extract entities and return classes of objects in different lists.  The functions are:
+For each NERC tool, I made functions in the appendix to extract entities and return classes of objects in different lists. If you are following along, you should have run all the code blocks in the Appendix.  If not, go there and do it now. The functions are:
 * nltktreelist -> NLTK Standard Chunker
 * get_continuous_chunks -> Stanford Named Entity Recognizer 
 * extraction -> Polyglot Extraction tool <br><br>
 
+In one block of code, we pass our data into each function and build a nested dictonary with the top and reference entities for each NERC tool.  This code may take a bit of time to run (30 secs to a minute).  Here's our code:
 
-```python
+
+```
 #**********************************************************************
 #  NLTK Standard Chunker
 #**********************************************************************
@@ -721,10 +727,10 @@ poly_p19ents = {'top': extraction(p19['top']), 'references': extraction(p19['ref
 poly_p29ents = {'top': extraction(p29['top']), 'references': extraction(p29['references'])}
 ```
 
-<br><br> Using the [tabulate](https://pypi.python.org/pypi/tabulate) library again, we print out the true person entities and the extractions from all the tools for comparison.  We make use of the the [sets](https://docs.python.org/2/library/sets.html) module from the standard library, specifically the *set1.intersect(set2)* functionality, to return a single set that has elements that are common to both set1 and set2. In this case, set1 is the list of entities from the hand labeled list and set2 is the list of entities extracted by the NERC tool.  Linuxtopia has an [intuitive discussion of the *set* module and its various operations](http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html).   First, we print out a the results of our NERC tools on top section of the journal article.<br><br> 
+<br><br> Using the [tabulate](https://pypi.python.org/pypi/tabulate) module again, we print out the true person entities and the extractions from all the tools for comparison.  We make use of the the [sets](https://docs.python.org/2/library/sets.html) module from the Python standard library, specifically the *set1.intersect(set2)* functionality, to return a single named entity set that has elements that are common to both set1 and set2. In this case, set1 is the list of entities from the hand labeled list and set2 is the list of entities extracted by the NERC tool.  Linuxtopia.com has an [intuitive discussion of the *set* module and its various operations](http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html).   Here is our code to see the results:<br><br> 
 
 
-```python
+```
 truth19 = {}
 truth19['persons'] = p19pdf_authors
 truth19['locations'] = p19pdf_author_locations
@@ -807,10 +813,12 @@ print tabulate(poly_p19ents['top'], headers="keys")
     Wei Zhang
 
 
-<br><br>We will focus specifically on the "persons" entity extractions to estimate performance from this point forward.  Feel free to try any of these scoring methods on the extractions of organizations or locations from the top or reference sections.  Moreover, the appendix has functions that can extract the abstracts and keywords from the corpus. To begin exploration of the NERC results, we will build a dataframe that places the results side by side for visual analysis<br><br>  
+<br><br>We will focus specifically on the "persons" entity extractions to estimate performance from this point forward.  Feel free to try any of these scoring methods on the extractions of organizations or locations from the top or reference sections.  Moreover, the appendix has functions that can extract the abstracts and keywords from the corpus. 
+
+To get a better look at how each NERC tool performed on the named person entities, we will use the [Pandas dataframe](http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.html).  Pandas is a beautiful thing indeed and must have for anyone who performs data analysis with Python. [Pandas is an open source, BSD-licensed library providing high-performance, easy-to-use data structures and data analysis tools for the Python programming language](http://pandas.pydata.org/). We use the dataframe to give a visual of side by side extractions from each NERC tool and the hand labeled extractions.  Here is our code to accomplish the task:<br><br>  
 
 
-```python
+```
 #**********************************************************************
 # Administrative code, importing necessary library or module
 #**********************************************************************
@@ -912,17 +920,17 @@ met
 
 
 
-From the dataframe, we see that neither of our NERC tools preformed perfectly.  NLTK Standard NERC appears to have extracted 3 false positives while the Stanford NERC missed 3 true positives and the Polyglot NERC extracted all but one true positive.  Pulling from a body of academic information, we can improve the reliability of classifications by combining the outputs from various classifiers in an ensemble method.  In this case, we will look make our final extraction set a combination of common unique items between two elements containing NERC results.  In theory, this should improve our results. But first, let's create little dataframes of our results to calculate some key figures.
+From the dataframe, we see that neither of our NERC tools preformed perfectly (they also didn't perform poorly).  NLTK Standard NERC appears to have extracted 3 false positives while the Stanford NERC missed 3 true positives and the Polyglot NERC extracted all but one true positive (partially extracted; returned first name only).  Pulling from a body of academic information, we can improve the reliability of classifications by combining the outputs from various classifiers in an ensemble method.  In this case, we will look make our final extraction set a combination of common unique items between two elements containing NERC results.  In theory, this should improve our results. But first, let's create dataframes of our results to calculate some key performance metrics.
 
 1. TN / True Negative: case was negative and predicted negative
 2. TP / True Positive: case was positive and predicted positive
 3. FN / False Negative: case was positive but predicted negative
 4. FP / False Positive: case was negative but predicted positive
 
-This function will calculate metrics to give us precision and recall.  Just pass in the names of the hand labeled list and the name of the extracted data.
+One unattributed rule in programming/coding is, "If you do it twice, write a program!"  We make a function for our key metrics figures above as we have three NERC tools to evaluate. Here is our code to accomplish the task:<br><br>
 
 
-```python
+```
 # Calculations and logic from http://www.kdnuggets.com/faq/precision-recall.html
 
 def metrics(truth,run):
@@ -949,19 +957,19 @@ def metrics(truth,run):
     
     d = {'Predicted Negative': [TN,FN], 'Predicted Positive': [FP,TP]}
     metricsdf = pd.DataFrame(d, index=['Negative Cases','Positive Cases'])
-
-    return metricsdf   
+    
+    return metricsdf 
 ```
 
-With a clean function, next is to pass each document into function to return the performance metrics for each NERC tool:
+Now let's pass our values into the fucntion and see some performance metrics. Here is our code to produce metrics dataframes for each NERC tool:
 
 
-```python
+```
 print
 print
-str = "NLTK Standard NERC Tool Metrics"
+str1 = "NLTK Standard NERC Tool Metrics"
 
-print str.center(40, ' ')
+print str1.center(40, ' ')
 print
 print
 metrics(p19pdf_authors,nltkstandard_p19ents['top']['persons'])
@@ -1007,12 +1015,12 @@ metrics(p19pdf_authors,nltkstandard_p19ents['top']['persons'])
 
 
 
-```python
+```
 print
 print
-str = "Stanford NERC Tool Metrics"
+str2 = "Stanford NERC Tool Metrics"
 
-print str.center(40, ' ')
+print str2.center(40, ' ')
 print
 print
 metrics(p19pdf_authors, stan_p19ents['top']['persons'])
@@ -1058,12 +1066,12 @@ metrics(p19pdf_authors, stan_p19ents['top']['persons'])
 
 
 
-```python
+```
 print
 print
-str = "Polyglot NERC Tool Metrics"
+str3 = "Polyglot NERC Tool Metrics"
 
-print str.center(40, ' ')
+print str3.center(40, ' ')
 print
 print
 metrics(p19pdf_authors,poly_p19ents['top']['persons'])
@@ -1110,7 +1118,7 @@ metrics(p19pdf_authors,poly_p19ents['top']['persons'])
 
 ### Reporting and Visualization
 
-We are in the Reporting and Visualization step of the <href id="pipe"><a href="#pipeline" title="Jump back to data science pipeline graphic.">data science pipeline</a> .  Looking at our crude calcuations above, we have some quick takeaways.  All the NERC tools extract at least one true positive entity from the top section successfully.  A small discussion of results highlights an approach to use NERC tools for different tasks: 
+We move to the **Reporting and Visualization step** of the <href id="pipe"><a href="#pipeline" title="Jump back to data science pipeline graphic.">data science pipeline</a> .  Looking at our crude metrics above, we have some quick takeaways.  All the NERC tools extract at least one true positive entity from the top section successfully.  A small discussion of results highlights an approach to use NERC tools for different tasks: 
 
 * The **NLTK Standard Chunker** has perfect accuracy and recall but lacks in the precision department.  It succesfully extracted all the authors for the document, but also extracted 3 false entities.  NLTK's chunker would serve well in an entity extraction pipeline where the data scientist is concerned with identifying all possible entities
 
@@ -1124,25 +1132,25 @@ Running these same scoring pipelines on different sections of the journal articl
 
 ### Optimization using ensemble methods: Two classifiers is better than one
 
-In our discussion above, we notice the varying levels of performance.  Intuitive thought and observation of the results suggest a pathway to improve our extractor performance, by combining the results using the *set* module. Between all three NERC tools, at least one of the evaulation scores is 1.0.  Form the result sets, each NERC tool had at least 3 named persons that were true positives.  But, no two NERC tools had the same false positive named entity, or false negative for that matter.  Using the set method to [set intersection and union operations](http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html) we can improve the performance of our named entitiy extraction by creating an ensemble classifier, which [refers to a group of individual classifiers that are cooperatively trained on data set in a supervised classification problem](http://arxiv.org/pdf/1404.4088.pdf).  Our ensemble classifier rule is very simple:
+In our discussion above, we notice the varying levels of performance.  Intuitive thought and observation of the results suggest a pathway to improve our extractor performance, by combining the results using the *set* module. Between all three NERC tools, at least one of the metrics scores is 1.0.  From the result sets, each NERC tool had at least 3 named persons that were true positives.  But, no two NERC tools had the same false positive, or false negative for that matter.  Using the set method to [set intersection and union operations](http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html) we can improve the performance of our named entitiy extraction by creating an ensemble classifier, which [refers to a group of individual classifiers that are cooperatively trained on data set in a supervised classification problem](http://arxiv.org/pdf/1404.4088.pdf).  Our ensemble classifier "voting" rule is very simple:
 
-<span style="color:red">1. Return all named entities that exist in at least two of the named entity result sets from our NERC tool</span>
+<span style="color:red">1. Return all named entities that exist in at least two of the true positive named entity result sets from our NERC tool</span>
 
-We implement this rule using the *set* module.  Because this is a supervised problem, we compare each of our NERC results for named "person" extractions to the hand labeled person extractions. First, we build the sets:
+We implement this rule using the *set* module.  We first do an *intersection* operation of the NERC results vs the hand labeled entities to get our "true positive" set. First, we build the true positive sets:
 
 
-```python
-a =set(nltkstandard_p19ents['top']['persons']) & set(p19pdf_authors)
-b =set(stan_p19ents['top']['persons']) & set(p19pdf_authors)
-c = set(poly_p19ents['top']['persons']) & set(p19pdf_authors)
+```
+a =set(sorted(nltkstandard_p19ents['top']['persons'])) & set(p19pdf_authors)
+b =set(sorted(stan_p19ents['top']['persons'])) & set(p19pdf_authors)
+c = set(sorted(poly_p19ents['top']['persons'])) & set(p19pdf_authors)
 ```
 
 These sets have named entities from the NERC tool results that were in the hand labeled extractions.  Or, in more simple terms, we return the True Positives (TPs) for each result set.  
 
-Now we use the [*union* operation from the set module](http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html) where the resulting set has named entities from both source sets. An named entity is in the result set if it is one set or the other.  The end result is, we should return a set that contains all of the true positives from each NERC tool.  By joining only true positives, we eliminate the false negatives, false positives from the data set.  If we had true negatives in this exercise, these would also be included to improve the overall performance of the ensemble classifier.  First we build the super set in one simple line of code:
+Now we use the [*union* operation from the set module](http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html) where the resulting set has named entities from both source sets. A named entity is in the result set if it is one set or the other.  The end result is, we should return a set that contains all of the true positives from each NERC tool.  By joining only true positives, we eliminate the false negatives, false positives from the data set.  If we had true negatives in this exercise, these would also be included to improve the overall performance of the ensemble classifier.  We build the super set in one simple line of code:
 
 
-```python
+```
 (a.union(b)).union(c)
 ```
 
@@ -1158,10 +1166,10 @@ Now we use the [*union* operation from the set module](http://www.linuxtopia.org
 
 
 
-For a quick visual comparison, we add this output to our earlier dataframe.  We want our truth column values to match our ensemble column values.  
+To get a visual comparison of the extractions for each tool and the ensemble set side by side, we return to our dataframe from earlier. In this case, we use the *concat* operation in pandas to append the new ensemble set to the dataframe.  Our code to accomplish the task is:<br><br>
 
 
-```python
+```
 dfensemble = pd.Series(list((a.union(b)).union(c)), index=None, dtype=None, name='Ensemble Entities', copy=False, fastpath=False)
 met = pd.concat([df4,dfensemble,df3,df2,df1], axis=1).fillna('')
 met
@@ -1261,10 +1269,10 @@ met
 
 
 
-Finally, let's see how our performance metrics look
+And we get a look at the performance metrics to see if we push our scores up in all categories:
 
 
-```python
+```
 print
 print
 str = "Ensemble NERC Metrics"
@@ -1314,15 +1322,15 @@ metrics(p19pdf_authors,list((a.union(b)).union(c)))
 
 
 
- Exactly as expected, we see improved performance and a 100 percent accurate extraction of named person entities from the top section of the journal article.  Now, this is Utopia, and shouldn't be expected for all datasets. Moroever, this is a very small sample and only intended to show the application of the method.  Applying this method to other sections of the journal articles will not lead to a perfect extraction, but it will indeed improve the performance of the extraction considerably. 
+ Exactly as expected, we see improved performance across all performance metric scores and in the end get a perfect extraction of all named persons from this document.  Before we go ANY further, the idea of moving from "okay" to "perfect" is unrealistic. Moroever, this is a very small sample and only intended to show the application of the method.  Applying this method to other sections of the journal articles will not lead to a perfect extraction, but it will indeed improve the performance of the extraction considerably. 
 
 ###  CRITICAL STEP: Getting your data in open file format
 
-The very last thing we do, is store this data in json format.  Be warned, this is my own personal addition to the <href id="pipe"><a href="#pipeline" title="Jump back to data science pipeline graphic.">data science pipeline</a>. This is a VERY important step because while I LOVE Python, there are other languages in the world, and those languages only except certain data types. A good rule for any data analytics/data science pipeline is to store the result or output in an open file format.  Why? An [open file format is a published specification for storing digital data, usually maintained by a standards organization, and which can be used and implemented by anyone](https://en.wikipedia.org/wiki/Open_format).  The key words is "anyone". I selected [JavaScript Object Notation(JSON)](https://en.wikipedia.org/wiki/JSON), which is an open standard format that uses human-readable text to transmit data objects consisting of attribute–value pairs.  We'll take our ensemble results lists of persons, store it as a Python dictionary, and then convert it to json. We could embed this *json.dumps* module into our functions that return dictionaries, and ensure we get the open file format in one step. 
+The very last thing we do, is store this data in json format.  Be warned, this is my own personal addition to the <href id="pipe"><a href="#pipeline" title="Jump back to data science pipeline graphic.">data science pipeline</a>. This is a VERY important step because while I LOVE Python, there are other languages in the world, and those languages only except certain data types. A good rule for any data analytics/data science pipeline is to store results or output in an open file format.  Why? An [open file format is a published specification for storing digital data, usually maintained by a standards organization, and which can be used and implemented by anyone](https://en.wikipedia.org/wiki/Open_format).  The key word in that definition is "anyone". I selected [JavaScript Object Notation(JSON)](https://en.wikipedia.org/wiki/JSON), which is an open standard format that uses human-readable text to transmit data objects consisting of attribute–value pairs.  We take our ensemble results list of persons, store it as a Python dictionary, and then convert it to json. For a true "pythonic" experience, we could embed this *json.dumps* module into our functions that return dictionaries, and ensure we get the open file format every step of the way so that other data scientists or users could pick and choose what portions of code to use in their custom pipelines.  Here is our code to accomplish the task:<br><br> 
 
 
 
-```python
+```
 import json
 
 p19_authors = {"authors":list((a.union(b)).union(c))}
@@ -1344,6 +1352,7 @@ The techniques in this post can be applied to other domains, larger datasets or 
 * [Natural Language Toolkit Book (free online resource)](http://www.nltk.org/book/) and the [NLTK Standard Chunker](http://www.nltk.org/_modules/nltk/chunk/named_entity.html) and a [post on how to use the chunker](http://stackoverflow.com/questions/19312573/nltk-for-named-entity-recognition)
 * [Polyglot natrual language pipeline for massive muliligual applications](https://pypi.python.org/pypi/polyglot) and the [journal article describing the word classification model](http://arxiv.org/pdf/1410.3791.pdf)
 * [Stanford Named Entity Recognizer](http://nlp.stanford.edu/software/CRF-NER.shtml) and the [NLTK interface to the Stanford NER](http://www.nltk.org/_modules/nltk/tag/stanford.html) and a [post on how to use the interface](http://textminingonline.com/how-to-use-stanford-named-entity-recognizer-ner-in-python-nltk-and-other-programming-languages)
+* [Python Pandas](http://pandas.pydata.org/) is a must have tool for anyone who does analysis in Python.  The best book I've used to date is [Python for Data Analysis: Data Wrangling with Pandas, NumPy, and IPython](https://play.google.com/store/books/details?id=v3n4_AK8vu0C&source=productsearch&utm_source=HA_Desktop_US&utm_medium=SEM&utm_campaign=PLA&pcampaignid=MKTAD0930BO1&gl=US&gclid=COnf8Z_BncoCFYKvNwodVA4ItA&gclsrc=ds)
 * [Intuitive description and examples of Python's standard library set module](http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html)
 * [Discussion of ensemble classifiers](http://arxiv.org/pdf/1404.4088.pdf)
 * [Nice module to print tables in standard python output called tablulate](https://pypi.python.org/pypi/tabulate)
@@ -1384,7 +1393,7 @@ If you liked this post, make sure to go to the [blog home page](http://districtd
 ### All of the libraries, functions,  that are used
 
 
-```python
+```
 import os
 import time
 from os import walk
@@ -1406,7 +1415,7 @@ from emailextractor import file_to_str, get_emails # paste code to .py file from
 ### Function to pull Top Section only
 
 
-```python
+```
 # attempting function with gold top section...Normal case done
 
 def toppull(docnum=None,section='top',full = False):
@@ -1485,7 +1494,7 @@ def toppull(docnum=None,section='top',full = False):
 ### Function to pull References section only
 
 
-```python
+```
 # attempting function with gold references section
 
 def refpull(docnum=None,section='references',full = False):
@@ -1588,7 +1597,7 @@ def refpull(docnum=None,section='references',full = False):
 ### Function to build lists of named entity classes from Polyglot NERC Tool
 
 
-```python
+```
 def extraction(corpus):
     import itertools
     import unicodedata
@@ -1641,7 +1650,7 @@ def extraction(corpus):
 ### Function to build list of named entity classes from Standard NLTK Chunker
 
 
-```python
+```
 def nltktreelist(text):
     from operator import itemgetter
     
@@ -1726,7 +1735,7 @@ def nltktreelist(text):
 ### Function to build list of named entity classes using Standard NER Tool
 
 
-```python
+```
 def get_continuous_chunks(string):
     string = string
     continuous_chunk = []
@@ -1805,7 +1814,7 @@ def get_continuous_chunks(string):
 ### Function to pull Keywords section only
 
 
-```python
+```
 # attempting function with gold keywords....
 
 def keypull(docnum=None,section='keywords',full = False):
@@ -1893,7 +1902,7 @@ def keypull(docnum=None,section='keywords',full = False):
 ### Function to pull Abstracts only
 
 
-```python
+```
 # attempting function with gold abstracts...Normal case done
 
 def abpull(docnum=None,section='abstract',full = False):
@@ -1976,7 +1985,7 @@ def abpull(docnum=None,section='abstract',full = False):
 ### Code to test the ensemble method on the references section
 
 
-```python
+```
 df9 = pd.Series(poly_p19ents['references']['persons'], index=None, dtype=None, name='Polyglot NERC', copy=False, fastpath=False)
 df6=pd.Series(stan_p19ents['references']['persons'], index=None, dtype=None, name='Stanford NERC', copy=False, fastpath=False)
 df7=pd.Series(nltkstandard_p19ents['references']['persons'], index=None, dtype=None, name='NLTKStandard NERC', copy=False, fastpath=False)
@@ -1985,7 +1994,7 @@ pd.concat([df9,df6,df7,df8], axis=1).fillna('')
 ```
 
 
-```python
+```
 d =set(nltkstandard_p19ents['references']['persons']) & set(p19pdf_references_authors)
 e =set(stan_p19ents['references']['persons']) & set(p19pdf_references_authors)
 f = set(poly_p19ents['references']['persons']) & set(p19pdf_references_authors)
@@ -1995,31 +2004,16 @@ f = set(poly_p19ents['references']['persons']) & set(p19pdf_references_authors)
 ### Random news article test on Named entity extraction; works well on normal text and news
 
 
-```python
+```
 raw ='This post was originally titled, "Should we root for the Chiefs to lose?", and was written when our Kansas City Chiefs were 3-5.\n\nThat may seem like an eternity ago, but there was a general sense during the week before the Chiefs played the Broncos in Denver that the season was lost. The focus here at Arrowhead Pride went quickly from the Super Bowl to mock drafts. Arguments that the Chiefs just tank the season for a better draft pick were seriously made. It seemed like a waste to even win two straight if it meant improving to a still-worthless 3-5.\n\nAfter all, the Andy Reid era Chiefs had never beaten Denver. And, even if they did, what were they supposed to do, go on a nine-game win streak and make the playoffs?\n\nStill, even within that atmosphere of capitulation as the Chiefs headed into their Week 9 bye to prepare for a trip to Denver, no one wanted them to lose that game. With the hated enemies one Sunday away, publishing a post asking for patience and a little faith in our 2015 Kansas City Chiefs seemed silly. AP was unanimous about going 1- 0, even if that meant only for one week. We could get back to rooting for the Chiefs to go 4-12 next week.\n\nI wrote an article prior to the Denver game saying the Chiefs are a better team than Denver and could beat them on the road. It ended with talk of the season\'s rough start and provided optimism moving forward:\n\nBut that should make winning all the more awesome when it happens, right? And the Chiefs are very, very close to winning. This is a good team finally on the right side of an unfortunate first half of football.\n\nSo I tucked away this post you\'re about to read. And I waited. And waited. And kept on waiting. The Chiefs kept on winning. And the Chiefs kept on winning some more. They kept on winning until this post, written near the nadir of 2015, was suddenly arguing for a perspective that everyone had since acquired.\n\nBut now Week 17 is upon us, and Kansas City is guaranteed at least two more games. The game will occur in Denver, Colorado at 5:30 pm.  This post could wait no longer. Take it as a reminder of how far our Chiefs have come since Week 9.\n\nI present, unedited from its original text, an argument for why we should stop calling for Andy Reid\'s head.\n'
 ```
 
 
-```python
+```
 get_continuous_chunks(raw)
 ```
 
 
-
-
-    {'locations': [u'Kansas City Chiefs',
-      u'Denver',
-      u'Arrowhead',
-      u'Denver',
-      u'Denver',
-      u'Kansas City',
-      u'Colorado'],
-     'organizations': [],
-     'persons': [u'Andy Reid']}
-
-
-
-
-```python
+```
 
 ```
