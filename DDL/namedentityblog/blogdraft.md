@@ -1336,23 +1336,6 @@ The techniques in this post can be applied to other domains, larger datasets or 
 
 If you liked this post, make sure to go to the [blog home page](http://districtdatalabs.silvrback.com/) and click the **Subscribe** button so that you don't miss any of our future posts. We're also always looking for blog contributors, so if you have data science skills and want to get some exposure, [apply here](http://www.districtdatalabs.com/#!blog-contributor/c4m8).
 
-
-```python
-df9 = pd.Series(poly_p19ents['references']['persons'], index=None, dtype=None, name='Polyglot NERC', copy=False, fastpath=False)
-df6=pd.Series(stan_p19ents['references']['persons'], index=None, dtype=None, name='Stanford NERC', copy=False, fastpath=False)
-df7=pd.Series(nltkstandard_p19ents['references']['persons'], index=None, dtype=None, name='NLTKStandard NERC', copy=False, fastpath=False)
-df8 = pd.Series(p19pdf_references_authors, index=None, dtype=None, name='True Ref Authors', copy=False, fastpath=False)
-pd.concat([df9,df6,df7,df8], axis=1).fillna('')
-```
-
-
-```python
-d =set(nltkstandard_p19ents['references']['persons']) & set(p19pdf_references_authors)
-e =set(stan_p19ents['references']['persons']) & set(p19pdf_references_authors)
-f = set(poly_p19ents['references']['persons']) & set(p19pdf_references_authors)
-(d.union(e)).union(f)
-```
-
 ### References
 
 <sup id="fn1">1. [(2014). Text Mining and its Business Applications - CodeProject. Retrieved December 26, 2015, from http://www.codeproject.com/Articles/822379/Text-Mining-and-its-Business-Applications.]<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
@@ -1967,6 +1950,27 @@ def abpull(docnum=None,section='abstract',full = False):
                         pass
         return ans
         return failids
+```
+
+# *** <span style="color:red">STOP HERE IF YOU ARE DOING INITIAL LOAD FOR iPython NOTEBOOK</span>***
+
+### Code to test the ensemble method on the references section
+
+
+```python
+df9 = pd.Series(poly_p19ents['references']['persons'], index=None, dtype=None, name='Polyglot NERC', copy=False, fastpath=False)
+df6=pd.Series(stan_p19ents['references']['persons'], index=None, dtype=None, name='Stanford NERC', copy=False, fastpath=False)
+df7=pd.Series(nltkstandard_p19ents['references']['persons'], index=None, dtype=None, name='NLTKStandard NERC', copy=False, fastpath=False)
+df8 = pd.Series(p19pdf_references_authors, index=None, dtype=None, name='True Ref Authors', copy=False, fastpath=False)
+pd.concat([df9,df6,df7,df8], axis=1).fillna('')
+```
+
+
+```python
+d =set(nltkstandard_p19ents['references']['persons']) & set(p19pdf_references_authors)
+e =set(stan_p19ents['references']['persons']) & set(p19pdf_references_authors)
+f = set(poly_p19ents['references']['persons']) & set(p19pdf_references_authors)
+(d.union(e)).union(f)
 ```
 
 ### Random news article test on Named entity extraction; works well on normal text and news
