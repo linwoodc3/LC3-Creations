@@ -39,7 +39,7 @@ The first thing we do is set up an environment that is exactly like the environm
 
 If you use some other method to set up a virtual environment, make sure you have all the files installed from my yml file. The one dependency not in the yml file is the email extractor.  [Cut and paste the function from this website](https://gist.github.com/dideler/5219706), save it to a .py file, and make sure it is in your sys.path or environment path.  
 
-If you are running this as an iPython notebook, stop here.  Go to the appendix and run all of the blocks of code before continuing. 
+If you are running [this as an iPython notebook](https://github.com/linwoodc3/LC3-Creations/blob/master/DDL/namedentityblog/blogdraft.ipynb), stop here.  Go to the appendix and run all of the blocks of code before continuing. 
 
 ### The Data: Peer Reviewed Journals and Keynote Speaker Abstracts from KDD 2014 and 2015
 
