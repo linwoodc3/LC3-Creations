@@ -1,7 +1,7 @@
 
 # A ~~Quick~~ Survey of Open Source Named Entity Extractor Tools for Python and Implementation of a Simplistic Ensemble Classifier
 
-Named entity extraction is a core subtask of building knowledge from semi/unstructured text sources<sup><a href="#fn1" id="ref1">1</a></sup>.  Considering recent increases in computing power and decreases in the costs of data storage, data scientists and developers can build large knowledge bases that contain millions of entities and hundreds of millions of facts about them.  These knowledge bases are key contributors to intelligence computer behavior<sup><a href="#fn2" id="ref2">2</a></sup>.  Therefore, named entity extraction is at the core of several popular technologies such as smart assistants ([Siri](http://www.apple.com/ios/siri/), [Google Now](https://www.google.com/landing/now/)), machine reading, and deep interpretation of natural language<sup><a href="#fn3" id="ref3">3</a></sup>.
+Named entity extraction is a core subtask to build knowledge from semi/unstructured text sources<sup><a href="#fn1" id="ref1">1</a></sup>.  Considering recent increases in computing power and decreases in the costs of data storage, data scientists and developers can build large knowledge bases that contain millions of entities and hundreds of millions of facts about them.  These knowledge bases are key contributors to intelligent computer behavior<sup><a href="#fn2" id="ref2">2</a></sup>.  Therefore, named entity extraction is at the core of several popular technologies such as smart assistants ([Siri](http://www.apple.com/ios/siri/), [Google Now](https://www.google.com/landing/now/)), machine reading, and deep interpretation of natural language<sup><a href="#fn3" id="ref3">3</a></sup>.
 
 With a realization of how essential it is to recognize information units like names, including person, organization and location names, and numeric expressions including time, date, money
 and percent expressions, several questions come to mind.  How do you perform named entity extraction, which is formally called “[Named Entity Recognition and Classification (NERC)](https://benjamins.com/catalog/bct.19)”?  What tools are out there?  How can you evaluate their performance?  And most important, what works with Python (shamelessly exposing my bias)?  
@@ -12,7 +12,7 @@ We will specifically learn to:
 1. follow the data science pipeline (see image below)
 2. prepare semistructured natural language data for ingest using regex
 3. create a custom corpus in [Natural Language Toolkit](http://www.nltk.org/) 
-4. use a suite of openly available NERC tools to extract entities and store in json format 
+4. use a suite of openly available NERC tools to extract entities and store in json format; supports open data sharing
 5. compare the performance of NERC tools on our corpus
 6. improve named entity extraction by combining only the true positives from NERC results (ensemble classifier)
 
@@ -1314,7 +1314,25 @@ metrics(p19pdf_authors,list((a.union(b)).union(c)))
 
 
 
-Exactly as expected, we see improved performance and a 100% accurate extraction of named person entities from the top section of the journal article.  Now, this is Utopia, and shouldn't be expected for all datasets. Moroever, this is a very small sample and only intended to show the application of the method.  Applying this method to other sections of the journal articles will not lead to a perfect extraction, but it will indeed improve the performance of the extraction considerably.  
+ Exactly as expected, we see improved performance and a 100 percent accurate extraction of named person entities from the top section of the journal article.  Now, this is Utopia, and shouldn't be expected for all datasets. Moroever, this is a very small sample and only intended to show the application of the method.  Applying this method to other sections of the journal articles will not lead to a perfect extraction, but it will indeed improve the performance of the extraction considerably. 
+
+###  CRITICAL STEP: Getting your data in open file format
+
+The very last thing we do, is store this data in json format.  This is a VERY important step because while I LOVE Python, there are other languages in the world, and those languages only except certain data types. A good rule for any data analytics/data science pipeline is to store the result or output in an open file format.  Why? An [open file format is a published specification for storing digital data, usually maintained by a standards organization, and which can be used and implemented by anyone](https://en.wikipedia.org/wiki/Open_format).  The key words is "anyone". I selected [JavaScript Object Notation(JSON)](https://en.wikipedia.org/wiki/JSON), which is an open standard format that uses human-readable text to transmit data objects consisting of attribute–value pairs.  We'll take our ensemble results lists of persons, store it as a Python dictionary, and then convert it to json. We could embed this *json.dumps* module into our functions that return dictionaries, and ensure we get the open file format in one step. 
+
+
+
+```python
+import json
+
+p19_authors = {"authors":list((a.union(b)).union(c))}
+
+output = json.dumps(p19_authors, ensure_ascii=False)
+print output
+```
+
+    {"authors": ["Wei Zhang", "Tim Althoff", "Xin Luna Dong", "Van Dang", "Kevin Murphy", "Safa Alai"]}
+
 
 ### Conclusion
 
@@ -1372,6 +1390,7 @@ import time
 from os import walk
 import string
 import unicodedata
+import json
 import subprocess
 import nltk
 import os, os.path
