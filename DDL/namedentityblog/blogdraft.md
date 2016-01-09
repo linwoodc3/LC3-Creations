@@ -927,7 +927,7 @@ From the dataframe, we see that neither of our NERC tools preformed perfectly (t
 3. FN / False Negative: case was positive but predicted negative
 4. FP / False Positive: case was negative but predicted positive
 
-One unattributed rule in programming/coding is, "If you do it twice, write a program!"  We make a function for our key metrics figures above as we have three NERC tools to evaluate. Here is our code to accomplish the task:<br><br>
+One unattributed rule in programming/coding is, "If you do it twice, write a function!"  We make a function for our key metrics figures above as we have three NERC tools to evaluate. Here is our code to accomplish the task:<br><br>
 
 
 ```
