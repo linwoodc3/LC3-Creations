@@ -1129,15 +1129,13 @@ We move to the **Reporting and Visualization step** of the <href id="pipe"><a hr
 Running these same scoring pipelines on different sections of the journal articles (references, abstract, keywords, etc.) will yield different results (i.e. Polyglot pulls last name only from reference section while NLTK Standard and Stanford NER pull first initial last name well, but with less matches). 
 
 # Insert simple graphic showing comparison of FP, TP, FN
-
 ### Optimization using ensemble methods: Two classifiers is better than one
 
 In our discussion above, we notice the varying levels of performance.  Intuitive thought and observation of the results suggest a pathway to improve our extractor performance, by combining the results using the *set* module. Between all three NERC tools, at least one of the metrics scores is 1.0.  From the result sets, each NERC tool had at least 3 named persons that were true positives.  But, no two NERC tools had the same false positive, or false negative for that matter.  Using the set method to [set intersection and union operations](http://www.linuxtopia.org/online_books/programming_books/python_programming/python_ch16s03.html) we can improve the performance of our named entitiy extraction by creating an ensemble classifier, which [refers to a group of individual classifiers that are cooperatively trained on data set in a supervised classification problem](http://arxiv.org/pdf/1404.4088.pdf).  Our ensemble classifier "voting" rule is very simple:
 
 <span style="color:red">1. Return all named entities that exist in at least two of the true positive named entity result sets from our NERC tool</span>
 
-We implement this rule using the *set* module.  We first do an *intersection* operation of the NERC results vs the hand labeled entities to get our "true positive" set. First, we build the true positive sets:
-
+We implement this rule using the *set* module.  We first do an *intersection* operation of the NERC results vs the hand labeled entities to get our "true positive" set. Here is our code to accomplish the task:
 
 ```
 a =set(sorted(nltkstandard_p19ents['top']['persons'])) & set(p19pdf_authors)
